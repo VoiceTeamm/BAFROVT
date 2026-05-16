@@ -1,14 +1,15 @@
 import api from './api'
 
-export interface ChatResponse {
+export interface SendMessagePayload {
   message: string
-  timestamp: string
+  history: { role: string; content: string }[]
+}
+
+export interface SendMessageResponse {
+  reply: string
 }
 
 export const chatService = {
-  sendMessage: (content: string) =>
-    api.post<ChatResponse>('/chat/message', { content }).then((r) => r.data),
-
-  getHistory: () =>
-    api.get<ChatResponse[]>('/chat/history').then((r) => r.data),
+  sendMessage: (payload: SendMessagePayload) =>
+    api.post<SendMessageResponse>('/api/chat', payload).then((r) => r.data),
 }

@@ -1,29 +1,40 @@
 import { Mic, MicOff } from 'lucide-react'
+import { Button } from '../ui'
+import { useVoice } from '../../hooks/useVoice'
 import { cn } from '../../lib/utils'
 
-interface VoiceButtonProps {
-  isRecording: boolean
-  onClick: () => void
-  disabled?: boolean
-}
+export function VoiceButton() {
+  const { isRecording, error, startRecording, stopRecording, resetRecording } = useVoice()
 
-export function VoiceButton({ isRecording, onClick, disabled }: VoiceButtonProps) {
+  function handleClick() {
+    if (isRecording) {
+      stopRecording()
+    } else {
+      resetRecording()
+      startRecording()
+    }
+  }
+
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      aria-label={isRecording ? 'Stop recording' : 'Start recording'}
-      className={cn(
-        'rounded-full p-3 transition-all duration-200',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
-        'disabled:opacity-50 disabled:cursor-not-allowed',
-        isRecording
-          ? 'bg-error text-white shadow-lg animate-pulse'
-          : 'bg-primary text-white hover:bg-primary-hover shadow-sm',
+    <div className="relative inline-flex">
+      <Button
+        type="button"
+        variant={isRecording ? 'danger' : 'primary'}
+        size="md"
+        onClick={handleClick}
+        aria-label={isRecording ? 'Stop recording' : 'Start recording'}
+        className={cn(
+          'rounded-full p-3',
+          isRecording && 'animate-pulse shadow-lg shadow-error/40',
+        )}
+      >
+        {isRecording ? <MicOff size={20} /> : <Mic size={20} />}
+      </Button>
+      {error && (
+        <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs text-error whitespace-nowrap w-max">
+          {error}
+        </span>
       )}
-    >
-      {isRecording ? <MicOff size={20} /> : <Mic size={20} />}
-    </button>
+    </div>
   )
 }
