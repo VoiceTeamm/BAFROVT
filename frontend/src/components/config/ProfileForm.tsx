@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { Card, Input, Button } from '../ui'
+import { useAuthStore } from '../../store/authStore'
 
 export function ProfileForm() {
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
+  const user = useAuthStore((s) => s.user)
+  const [name, setName] = useState(user?.name ?? '')
+  const [email, setEmail] = useState(user?.email ?? '')
   const [businessName, setBusinessName] = useState('')
 
   return (

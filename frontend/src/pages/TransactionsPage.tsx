@@ -56,16 +56,18 @@ const PAGE_SIZE = 10
 const INITIAL_FILTERS: FilterValues = { from: '', to: '', category: '', type: 'all' }
 
 export function TransactionsPage() {
-  const { transactions: liveData, isLoading, error } = useTransactions()
   const [filters, setFilters] = useState<FilterValues>(INITIAL_FILTERS)
   const [page, setPage] = useState(1)
   const [formOpen, setFormOpen] = useState(false)
 
-  // Use mock data as fallback when backend is unavailable
-  const allTransactions = liveData.length > 0 ? liveData : error ? MOCK_TRANSACTIONS : liveData
+  // Filters are forwarded as query params — the backend receives them directly
+  const { transactions: liveData, isLoading, error } = useTransactions(filters)
 
-  const filtered = useMemo(() => {
-    return allTransactions.filter((tx) => {
+  // When backend returns data it is already filtered; only apply client-side filter on the mock fallback
+  const allTransactions = useMemo(() => {
+    if (liveData.length > 0) return liveData
+    if (!error) return []
+    return MOCK_TRANSACTIONS.filter((tx) => {
       if (filters.from && tx.date < filters.from) return false
       if (filters.to && tx.date > filters.to) return false
       if (
@@ -76,11 +78,11 @@ export function TransactionsPage() {
       if (filters.type !== 'all' && tx.type !== filters.type) return false
       return true
     })
-  }, [allTransactions, filters])
+  }, [liveData, error, filters])
 
   const paginated = useMemo(
-    () => filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
-    [filtered, page],
+    () => allTransactions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [allTransactions, page],
   )
 
   const handleFilterChange = (vals: FilterValues) => {
@@ -127,7 +129,7 @@ export function TransactionsPage() {
         data={paginated}
         page={page}
         pageSize={PAGE_SIZE}
-        total={filtered.length}
+        total={allTransactions.length}
         onPageChange={setPage}
       />
 

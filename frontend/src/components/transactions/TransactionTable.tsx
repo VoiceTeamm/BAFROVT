@@ -1,4 +1,4 @@
-import { Badge, Table, type Column } from '../ui'
+import { Badge, Button, Table, type Column } from '../ui'
 import type { Transaction } from '../../types'
 
 interface TransactionTableProps {
@@ -83,20 +83,22 @@ export function TransactionTable({
             {Math.min(page * pageSize, total)} of {total}
           </span>
           <div className="flex gap-1">
-            <button
-              className="px-3 py-1 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => onPageChange(page - 1)}
               disabled={page <= 1}
             >
               Prev
-            </button>
-            <button
-              className="px-3 py-1 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => onPageChange(page + 1)}
               disabled={page >= totalPages}
             >
               Next
-            </button>
+            </Button>
           </div>
         </div>
       )}
