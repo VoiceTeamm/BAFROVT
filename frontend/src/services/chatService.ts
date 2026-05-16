@@ -11,5 +11,5 @@ export interface SendMessageResponse {
 
 export const chatService = {
   sendMessage: (payload: SendMessagePayload) =>
-    api.post<SendMessageResponse>('/api/chat', payload).then((r) => r.data),
+    api.post<SendMessageResponse>('/chat', payload).then((r) => r.data),
 }

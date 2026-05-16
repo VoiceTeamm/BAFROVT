@@ -5,7 +5,7 @@ export const voiceService = {
     const formData = new FormData()
     formData.append('audio', audio, 'recording.webm')
     return api
-      .post<{ text: string }>('/api/voice/transcribe', formData, {
+      .post<{ text: string }>('/voice/transcribe', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
       .then((r) => r.data)
