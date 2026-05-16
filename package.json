@@ -1,0 +1,25 @@
+{
+  "name": "bafrovt",
+  "version": "1.0.0",
+  "description": "��#\u0000 \u0000B\u0000A\u0000F\u0000R\u0000O\u0000V\u0000T\u0000\r\u0000 \u0000",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VoiceTeamm/BAFROVT.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/VoiceTeamm/BAFROVT/issues"
+  },
+  "homepage": "https://github.com/VoiceTeamm/BAFROVT#readme",
+  "devDependencies": {
+    "dotenv": "^17.4.2",
+    "prisma": "^7.8.0"
+  }
+}
