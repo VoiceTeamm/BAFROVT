@@ -3,7 +3,7 @@ import OpenAI from 'openai';
 import { prisma } from '../../shared/config/prisma';
 import { getIO } from '../../shared/config/socket';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+function getOpenAI() { return new OpenAI({ apiKey: process.env.OPENAI_API_KEY }); }
 
 // ─── Cola de Bull ─────────────────────────────────────────────────────────────
 export const recommendationQueue = new Queue('recommendations', {
@@ -37,7 +37,7 @@ recommendationQueue.process(async (job) => {
   const suggestedPrice = data.currentMonthTotal / (1 - targetMargin / 100);
 
   // GPT-4o genera el razonamiento
-  const aiResponse = await openai.chat.completions.create({
+  const aiResponse = await getOpenAI().chat.completions.create({
     model: 'gpt-4o',
     messages: [
       {
@@ -75,7 +75,7 @@ Margen objetivo: ${targetMargin}%.
     data: {
       userId: data.userId,
       categoryId: data.categoryId,
-      title: `Ajuste de precio — ${data.categoryName}`,
+      title: `Ajuste de precio �?${data.categoryName}`,
       description: aiData.reasoning,
       suggestedPrice: aiData.suggestedPrice,
       currentPrice: data.previousAvg,
