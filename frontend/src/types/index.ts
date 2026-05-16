@@ -31,6 +31,10 @@ export interface Recommendation {
   priority: 'high' | 'medium' | 'low'
   type: 'saving' | 'investment' | 'alert' | 'tip'
   createdAt: string
+  suggestedPrice?: number
+  currentPrice?: number
+  variationPct?: number
+  status?: 'active' | 'applied' | 'dismissed'
 }
 
 export interface Alert {
