@@ -1,10 +1,38 @@
+import { useEffect } from 'react'
 import { Mic, MicOff } from 'lucide-react'
 import { Button } from '../ui'
 import { useVoice } from '../../hooks/useVoice'
 import { cn } from '../../lib/utils'
 
-export function VoiceButton() {
-  const { isRecording, error, startRecording, stopRecording, resetRecording } = useVoice()
+interface VoiceButtonProps {
+  onTranscript?: (text: string) => void
+}
+
+export function VoiceButton({ onTranscript }: VoiceButtonProps) {
+  const {
+    isRecording,
+    audioBlob,
+    isTranscribing,
+    transcript,
+    error,
+    startRecording,
+    stopRecording,
+    transcribeAudio,
+    resetRecording,
+  } = useVoice()
+
+  useEffect(() => {
+    if (audioBlob) {
+      transcribeAudio(audioBlob)
+    }
+  }, [audioBlob, transcribeAudio])
+
+  useEffect(() => {
+    if (transcript && onTranscript) {
+      onTranscript(transcript)
+      resetRecording()
+    }
+  }, [transcript, onTranscript, resetRecording])
 
   function handleClick() {
     if (isRecording) {
@@ -22,7 +50,15 @@ export function VoiceButton() {
         variant={isRecording ? 'danger' : 'primary'}
         size="md"
         onClick={handleClick}
-        aria-label={isRecording ? 'Stop recording' : 'Start recording'}
+        disabled={isTranscribing}
+        loading={isTranscribing}
+        aria-label={
+          isRecording
+            ? 'Stop recording'
+            : isTranscribing
+              ? 'Transcribing…'
+              : 'Start recording'
+        }
         className={cn(
           'rounded-full p-3',
           isRecording && 'animate-pulse shadow-lg shadow-error/40',

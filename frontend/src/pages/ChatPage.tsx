@@ -13,7 +13,7 @@ export function ChatPage() {
         <h1 className="text-xl font-bold text-text-light">
           AI Financial Assistant
         </h1>
-        <VoiceButton />
+        <VoiceButton onTranscript={sendMessage} />
       </div>
 
       <Card className="flex-1 flex flex-col overflow-hidden p-0">
