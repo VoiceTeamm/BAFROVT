@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../src/generated"
 }
 
 datasource db {
@@ -71,10 +72,10 @@ model Category {
   color  String       @default("#3B82F6")
   icon   String       @default("tag")
 
-  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  transactions    Transaction[]
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions     Transaction[]
   monthlySummaries MonthlySummary[]
-  recommendations Recommendation[]
+  recommendations  Recommendation[]
 
   @@index([userId])
   @@map("categories")
@@ -137,12 +138,12 @@ model Recommendation {
 }
 
 model Alert {
-  id        String   @id @default(uuid())
+  id        String    @id @default(uuid())
   userId    String
   message   String
   type      AlertType
-  isRead    Boolean  @default(false)
-  createdAt DateTime @default(now())
+  isRead    Boolean   @default(false)
+  createdAt DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
