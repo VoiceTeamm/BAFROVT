@@ -94,6 +94,7 @@ model Transaction {
 
   @@index([userId, date])
   @@index([categoryId, date])
+  @@index([userId, type, date], name:"idx_tx_user_type_date")
   @@map("transactions")
 }
 
@@ -111,6 +112,7 @@ model MonthlySummary {
   category Category @relation(fields: [categoryId], references: [id])
 
   @@unique([userId, categoryId, year, month])
+  @@index([year, month], name: "idx_monthly_year_month")
   @@map("monthly_summaries")
 }
 
@@ -144,6 +146,7 @@ model Alert {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([isRead], name: "idx_alerts_unread")
   @@map("alerts")
 }
 
