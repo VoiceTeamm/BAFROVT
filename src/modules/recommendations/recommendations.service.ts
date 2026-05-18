@@ -75,7 +75,7 @@ Margen objetivo: ${targetMargin}%.
     data: {
       userId: data.userId,
       categoryId: data.categoryId,
-      title: `Ajuste de precio â€?${data.categoryName}`,
+      title: `Ajuste de precio ï¿½?${data.categoryName}`,
       description: aiData.reasoning,
       suggestedPrice: aiData.suggestedPrice,
       currentPrice: data.previousAvg,
@@ -151,7 +151,7 @@ export async function analyzeExpenseDeviation(
 
   if (previousTotals.length === 0) return; // Sin historial previo
 
-  const previousAvg = previousTotals.reduce((sum, t) => sum + Number(t._sum.amount ?? 0), 0) / 3;
+  const previousAvg = previousTotals.reduce((sum: number, t: any) => sum + Number(t._sum.amount ?? 0), 0) / 3;
 
   if (previousAvg === 0) return;
 

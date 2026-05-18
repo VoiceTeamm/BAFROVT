@@ -1,4 +1,4 @@
-﻿import { prisma } from '../../shared/config/prisma';
+import { prisma } from '../../shared/config/prisma';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { env } from '../../shared/config/env';
@@ -9,16 +9,16 @@ export class AuthService {
         const existingUser = await prisma.user.findUnique({ where: { email: data.email } });
         if (existingUser) throw new Error('El email ya está registrado');
 
-        const hashedPassword = await bcrypt.hash(data.password, 10);
+        const passwordHash = await bcrypt.hash(data.password, 10);
 
         const user = await prisma.user.create({
             data: {
                 name: data.name,
                 email: data.email,
-                password: hashedPassword,
-                businessName: data.businessName,
+                passwordHash,
+                businessType: data.businessType ?? 'general',
             },
-            select: { id: true, name: true, email: true, businessName: true },
+            select: { id: true, name: true, email: true, businessType: true },
         });
 
         const token = this.generateToken(user.id);
@@ -29,13 +29,13 @@ export class AuthService {
         const user = await prisma.user.findUnique({ where: { email: data.email } });
         if (!user) throw new Error('Credenciales inválidas');
 
-        const validPassword = await bcrypt.compare(data.password, user.password);
+        const validPassword = await bcrypt.compare(data.password, user.passwordHash);
         if (!validPassword) throw new Error('Credenciales inválidas');
 
         const token = this.generateToken(user.id);
 
         return {
-            user: { id: user.id, name: user.name, email: user.email, businessName: user.businessName },
+            user: { id: user.id, name: user.name, email: user.email, businessType: user.businessType },
             token,
         };
     }

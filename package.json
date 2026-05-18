@@ -2,14 +2,26 @@
   "version": "1.0.0",
   "scripts": {
     "build": "tsc",
-    "prisma:generate": "npx prisma generate",
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "start": "node dist/index.js",
+    "prisma:generate": "npx prisma generate"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
+    "@types/cors": "^2.8.19",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.1.0",
     "bcryptjs": "^2.4.3",
+    "bull": "^4.16.5",
     "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
     "express": "^5.0.0",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.1.1",
+    "openai": "^6.38.0",
     "pg": "^8.20.0",
+    "socket.io": "^4.8.3",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

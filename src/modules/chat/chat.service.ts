@@ -14,7 +14,7 @@ const SYSTEM_PROMPT = `Eres VoiceFinance AI, un asistente financiero inteligente
 Tu rol es ayudar a registrar ventas y gastos, analizar tendencias financieras y dar recomendaciones de precios.
 Reglas:
 - Responde siempre en espa?ol, de forma clara y concisa.
-- Si el usuario menciona una venta o gasto, confirma que lo registrar¨¢s y extrae los datos.
+- Si el usuario menciona una venta o gasto, confirma que lo registrarï¿½ï¿½s y extrae los datos.
 - Usa unidades bolivianas (Bs) para montos.`;
 
 export async function sendChatMessage(userId: string, message: string, clientHistory: ChatMessage[]): Promise<string> {
@@ -26,7 +26,7 @@ export async function sendChatMessage(userId: string, message: string, clientHis
 
   const historyMessages: OpenAI.ChatCompletionMessageParam[] = dbHistory
     .reverse()
-    .map((msg) => ({
+    .map((msg: any) => ({
       role: msg.role.toLowerCase() as 'user' | 'assistant',
       content: msg.content,
     }));

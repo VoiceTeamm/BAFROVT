@@ -1,10 +1,9 @@
-﻿import { z } from 'zod';
+import { z } from 'zod';
 
 export const createTransactionSchema = z.object({
-    type: z.enum(['INCOME', 'EXPENSE'], {
-        errorMap: () => ({ message: 'El tipo debe ser INCOME o EXPENSE' }),
-    }),
+    type: z.enum(['INCOME', 'EXPENSE']),
     amount: z.number().positive('El monto debe ser mayor a 0'),
+    categoryId: z.string().optional(),
     category: z.string().optional(),
     description: z.string().optional(),
     date: z.string().datetime().optional(),

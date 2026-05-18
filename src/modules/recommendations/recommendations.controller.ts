@@ -26,7 +26,7 @@ export async function updateRecommendationHandler(
   next: NextFunction
 ): Promise<void> {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const userId = req.user!.id;
 
     const parsed = statusSchema.safeParse(req.body);

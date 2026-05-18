@@ -1,14 +1,41 @@
-﻿import { prisma } from '../../shared/config/prisma';
+import { prisma } from '../../shared/config/prisma';
 import { CreateTransactionInput, UpdateTransactionInput } from './transaction.schemas';
 
 export class TransactionService {
+    private async resolveCategory(userId: string, type: 'INCOME' | 'EXPENSE', categoryId?: string, categoryName?: string) {
+        if (categoryId) return categoryId;
+
+        const name = categoryName?.trim() || 'Other';
+        let category = await prisma.category.findFirst({
+            where: { userId, name },
+        });
+        if (!category) {
+            category = await prisma.category.create({
+                data: { userId, name, type },
+            });
+        }
+        return category.id;
+    }
+
     async createTransaction(userId: string, data: CreateTransactionInput) {
+        const categoryId = await this.resolveCategory(
+            userId,
+            data.type,
+            data.categoryId,
+            data.category,
+        );
+
         const transaction = await prisma.transaction.create({
             data: {
                 userId,
-                ...data,
+                categoryId,
+                type: data.type,
+                amount: data.amount,
+                note: data.description,
                 date: data.date ? new Date(data.date) : new Date(),
+                source: 'MANUAL',
             },
+            include: { category: true },
         });
 
         return transaction;
@@ -20,6 +47,7 @@ export class TransactionService {
         const [transactions, total] = await Promise.all([
             prisma.transaction.findMany({
                 where: { userId },
+                include: { category: true },
                 orderBy: { date: 'desc' },
                 skip,
                 take: limit,
@@ -40,10 +68,8 @@ export class TransactionService {
 
     async getTransactionById(userId: string, transactionId: string) {
         const transaction = await prisma.transaction.findFirst({
-            where: {
-                id: transactionId,
-                userId,
-            },
+            where: { id: transactionId, userId },
+            include: { category: true },
         });
 
         if (!transaction) {
@@ -53,20 +79,23 @@ export class TransactionService {
         return transaction;
     }
 
-    async updateTransaction(
-        userId: string,
-        transactionId: string,
-        data: UpdateTransactionInput
-    ) {
+    async updateTransaction(userId: string, transactionId: string, data: UpdateTransactionInput) {
         await this.getTransactionById(userId, transactionId);
+
+        const categoryId = data.type
+            ? await this.resolveCategory(userId, data.type, data.categoryId, data.category)
+            : undefined;
 
         const updated = await prisma.transaction.update({
             where: { id: transactionId },
             data: {
-                ...data,
-                date: data.date ? new Date(data.date) : undefined,
-                updatedAt: new Date(),
+                ...(data.type && { type: data.type }),
+                ...(data.amount && { amount: data.amount }),
+                ...(categoryId && { categoryId }),
+                ...(data.description !== undefined && { note: data.description }),
+                ...(data.date && { date: new Date(data.date) }),
             },
+            include: { category: true },
         });
 
         return updated;
@@ -83,28 +112,22 @@ export class TransactionService {
     }
 
     async getSummary(userId: string, startDate: Date, endDate: Date) {
-        const transactions = await prisma.transaction.findMany({
-            where: {
-                userId,
-                date: {
-                    gte: startDate,
-                    lte: endDate,
-                },
-            },
+        const transactions: any[] = await prisma.transaction.findMany({
+            where: { userId, date: { gte: startDate, lte: endDate } },
+            include: { category: true },
         });
 
         const income = transactions
-            .filter((t) => t.type === 'INCOME')
-            .reduce((sum, t) => sum + t.amount, 0);
+            .filter((t: any) => t.type === 'INCOME')
+            .reduce((sum: number, t: any) => sum + Number(t.amount), 0);
 
         const expenses = transactions
-            .filter((t) => t.type === 'EXPENSE')
-            .reduce((sum, t) => sum + t.amount, 0);
+            .filter((t: any) => t.type === 'EXPENSE')
+            .reduce((sum: number, t: any) => sum + Number(t.amount), 0);
 
-        const byCategory = transactions.reduce((acc, t) => {
-            if (t.category) {
-                acc[t.category] = (acc[t.category] || 0) + t.amount;
-            }
+        const byCategory = transactions.reduce((acc: Record<string, number>, t: any) => {
+            const name = (t.category?.name ?? t.categoryId) as string;
+            acc[name] = (acc[name] || 0) + Number(t.amount);
             return acc;
         }, {} as Record<string, number>);
 

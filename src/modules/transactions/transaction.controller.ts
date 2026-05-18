@@ -29,7 +29,7 @@ export const getTransactions = async (req: AuthRequest, res: Response) => {
 
 export const getTransactionById = async (req: AuthRequest, res: Response) => {
     try {
-        const { id } = req.params;
+        const id = req.params.id as string;
         const transaction = await transactionService.getTransactionById(req.userId!, id);
         res.json(transaction);
     } catch (error: any) {
@@ -39,7 +39,7 @@ export const getTransactionById = async (req: AuthRequest, res: Response) => {
 
 export const updateTransaction = async (req: AuthRequest, res: Response) => {
     try {
-        const { id } = req.params;
+        const id = req.params.id as string;
         const data: UpdateTransactionInput = req.body;
 
         const updated = await transactionService.updateTransaction(req.userId!, id, data);
@@ -51,7 +51,7 @@ export const updateTransaction = async (req: AuthRequest, res: Response) => {
 
 export const deleteTransaction = async (req: AuthRequest, res: Response) => {
     try {
-        const { id } = req.params;
+        const id = req.params.id as string;
         await transactionService.deleteTransaction(req.userId!, id);
         res.json({ message: 'Transacción eliminada correctamente' });
     } catch (error: any) {
