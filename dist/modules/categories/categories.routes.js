@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const authGuard_1 = require("../../shared/middleware/authGuard");
+const validators_1 = require("../../shared/validators");
+const validators_2 = require("../../shared/validators");
+const categories_controller_1 = require("./categories.controller");
+const router = (0, express_1.Router)();
+router.get('/', authGuard_1.authGuard, categories_controller_1.listCategoriesHandler);
+router.get('/:id', authGuard_1.authGuard, categories_controller_1.getCategoryHandler);
+router.post('/', authGuard_1.authGuard, (0, validators_1.validateBody)(validators_2.createCategorySchema), categories_controller_1.createCategoryHandler);
+router.put('/:id', authGuard_1.authGuard, categories_controller_1.updateCategoryHandler);
+router.delete('/:id', authGuard_1.authGuard, categories_controller_1.deleteCategoryHandler);
+exports.default = router;
