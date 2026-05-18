@@ -102,8 +102,8 @@ export class TransactionService {
             .reduce((sum, t) => sum + t.amount, 0);
 
         const byCategory = transactions.reduce((acc, t) => {
-            if (t.category) {
-                acc[t.category] = (acc[t.category] || 0) + t.amount;
+            if (t.categoryId) {
+                acc[t.categoryId] = (acc[t.categoryId] || 0) + t.amount;
             }
             return acc;
         }, {} as Record<string, number>);
