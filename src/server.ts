@@ -6,39 +6,37 @@ import { initSocket } from './shared/config/socket';
 import { errorHandler, notFound } from './shared/middleware/errorHandler';
 import { apiLimiter } from './shared/middleware/rateLimiter';
 
-// Rutas
 import voiceRoutes from './modules/voice/voice.routes';
 import chatRoutes from './modules/chat/chat.routes';
 import recommendationRoutes from './modules/recommendations/recommendations.routes';
 import webhookRoutes from './modules/webhooks/webhooks.routes';
+import categoryRoutes from './modules/categories/categories.routes';
+import alertRoutes from './modules/alerts/alerts.routes';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
 
-// Middlewares globales
 app.use(cors({ origin: process.env.FRONTEND_URL ?? 'http://localhost:5173', credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(apiLimiter);
 
-// Health check
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', message: 'VoiceFinance API running', version: '2.0' });
 });
 
-// Rutas Persona D
 app.use('/api/voice', voiceRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/webhooks', webhookRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/alerts', alertRoutes);
 
-// 404 y error handler (siempre al final)
 app.use(notFound);
 app.use(errorHandler);
 
-// Servidor HTTP + Socket.io
 const httpServer = createServer(app);
 initSocket(httpServer);
 
