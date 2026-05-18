@@ -3,8 +3,10 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { createServer } from 'http';
 import { initSocket } from './shared/config/socket';
+import { errorHandler, notFound } from './shared/middleware/errorHandler';
+import { apiLimiter } from './shared/middleware/rateLimiter';
 
-// Rutas Persona D
+// Rutas
 import voiceRoutes from './modules/voice/voice.routes';
 import chatRoutes from './modules/chat/chat.routes';
 import recommendationRoutes from './modules/recommendations/recommendations.routes';
@@ -19,23 +21,22 @@ const PORT = process.env.PORT ?? 3000;
 app.use(cors({ origin: process.env.FRONTEND_URL ?? 'http://localhost:5173', credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(apiLimiter);
 
 // Health check
 app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', message: 'VoiceFinance API running' });
+  res.json({ status: 'ok', message: 'VoiceFinance API running', version: '2.0' });
 });
 
-// Rutas
+// Rutas Persona D
 app.use('/api/voice', voiceRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/webhooks', webhookRoutes);
 
-// Error handler global
-app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error(err);
-  res.status(err.status ?? 500).json({ error: err.message ?? 'Internal Server Error' });
-});
+// 404 y error handler (siempre al final)
+app.use(notFound);
+app.use(errorHandler);
 
 // Servidor HTTP + Socket.io
 const httpServer = createServer(app);
