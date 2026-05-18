@@ -2,7 +2,6 @@
 /shelf/
 /workspace.xml
 # Rider ignored files
-/.idea.BAFROVT.iml
 /projectSettingsUpdater.xml
 /modules.xml
 /contentModel.xml
