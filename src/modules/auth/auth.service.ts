@@ -15,7 +15,7 @@ export class AuthService {
             data: {
                 name: data.name,
                 email: data.email,
-                password: hashedPassword,
+                passwordHash: hashedPassword,
                 businessName: data.businessName,
             },
             select: { id: true, name: true, email: true, businessName: true },
@@ -29,7 +29,7 @@ export class AuthService {
         const user = await prisma.user.findUnique({ where: { email: data.email } });
         if (!user) throw new Error('Credenciales inválidas');
 
-        const validPassword = await bcrypt.compare(data.password, user.password);
+        const validPassword = await bcrypt.compare(data.password, user.passwordHash);
         if (!validPassword) throw new Error('Credenciales inválidas');
 
         const token = this.generateToken(user.id);
