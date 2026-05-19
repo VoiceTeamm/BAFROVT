@@ -94,6 +94,7 @@ model Transaction {
   @@index([userId, date])
   @@index([categoryId, date])
   @@index([userId, type, date], name: "idx_tx_user_type_date")
+  @@index([amount], name: "idx_tx_amount_desc")
   @@map("transactions")
 }
 
