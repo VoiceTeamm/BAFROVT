@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { getActiveRecommendations, updateRecommendationStatus } from './recommendations.service';
+import RecommendationService from './recommendations.service';
 import { z } from 'zod';
 
 const statusSchema = z.object({
@@ -13,7 +13,8 @@ export async function listRecommendationsHandler(
 ): Promise<void> {
   try {
     const userId = req.user!.id;
-    const recommendations = await getActiveRecommendations(userId);
+    const status = req.query.status as 'ACTIVE' | 'DISMISSED' | 'APPLIED' | undefined;
+    const recommendations = await RecommendationService.getAll(userId, status);
     res.status(200).json({ recommendations });
   } catch (error) {
     next(error);
@@ -31,11 +32,11 @@ export async function updateRecommendationHandler(
 
     const parsed = statusSchema.safeParse(req.body);
     if (!parsed.success) {
-      res.status(400).json({ error: parsed.error.flatten() });
+      res.status(400).json({ error: parsed.error.issues });
       return;
     }
 
-    const updated = await updateRecommendationStatus(id, userId, parsed.data.status);
+    const updated = await RecommendationService.updateStatus(id, userId, parsed.data.status);
     res.status(200).json({ recommendation: updated });
   } catch (error) {
     next(error);
