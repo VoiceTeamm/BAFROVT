@@ -6,6 +6,8 @@ import { errorHandler } from './shared/middleware/errorHandler';
 import { initSocket } from './shared/config/socket';
 import authRouter from './modules/auth/auth.routes';
 import transactionRouter from './modules/transactions/transaction.routes';
+import categoryRouter from './modules/categories/category.routes';
+import { alertRouter } from './modules/alerts/alert.routes';
 import recommendationRoutes from './modules/recommendations/recommendations.routes';
 import chatRoutes from './modules/chat/chat.routes';
 import voiceRoutes from './modules/voice/voice.routes';
@@ -23,6 +25,8 @@ app.get('/health', (_req, res) => {
 
 app.use('/api/auth', authRouter);
 app.use('/api/transactions', transactionRouter);
+app.use('/api/categories', categoryRouter);
+app.use('/api/alerts', alertRouter);
 app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/voice', voiceRoutes);

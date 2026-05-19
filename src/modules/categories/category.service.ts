@@ -22,7 +22,11 @@ export const CategoryService = {
         if (existing) throw new Error('Ya existe una categoria con ese nombre para este tipo');
 
         return prisma.category.create({
-            data: { ...data, userId },
+            data: {
+                name: data.name,
+                type: data.type,
+                userId: userId,
+            },
         });
     },
 
