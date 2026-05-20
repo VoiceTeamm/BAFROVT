@@ -1,117 +1,752 @@
-# BAFROVT - Backend
+<p align="center">
+  <img src="https://img.shields.io/badge/Node.js-v18+-339933?style=for-the-badge&logo=node.js&logoColor=white" />
+  <img src="https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white" />
+  <img src="https://img.shields.io/badge/Prisma-7.8-2D3748?style=for-the-badge&logo=prisma&logoColor=white" />
+  <img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" />
+  <img src="https://img.shields.io/badge/Express-4.x-000000?style=for-the-badge&logo=express&logoColor=white" />
+  <img src="https://img.shields.io/badge/Socket.io-4.x-010101?style=for-the-badge&logo=socket.io&logoColor=white" />
+</p>
 
-Node.js/Express API with Prisma 7, PostgreSQL, Redis, and Socket.io.
+# VoiceFinance AI - Backend
 
----
-
-## What changed vs `origin/backend`
-
-| Area | Change |
-|------|--------|
-| Prisma | Upgraded to Prisma 7 with driver-adapter pattern (`@prisma/adapter-pg`). Added `prisma.config.ts` with `defineConfig` and explicit `DATABASE_URL` binding. Prisma CLI added as devDependency. |
-| Schema | Resolved merge conflicts. Full relational schema: `User`, `Category`, `Transaction`, `MonthlySummary`, `Recommendation`, `Alert`, `AgentMessage`. Uses `passwordHash` and `businessType`. |
-| Auth / JWT | Unified `authGuard` sets both `req.userId` and `req.user.id` from JWT payload `{ userId }`. |
-| Zod | Updated to v4 (`.errors` → `.issues`). |
-| Express | Fixed params typing for Express 5 (`req.params.id` as string). |
-| Entry point | Unified into a single `src/index.ts`. |
-| Transactions | Added `resolveCategory()` helper (find-or-create category). |
-| Dependencies | Added Prisma, Redis, OpenAI, Socket.io and others. |
+> API REST + WebSocket para gestion financiera inteligente con procesamiento de voz, chat en tiempo real y recomendaciones con IA.
 
 ---
 
-## Prerequisites
+## Tabla de Contenidos
 
-- Node.js 20+
-- Docker + Docker Compose
-- Git
+- [Requisitos Previos](#requisitos-previos)
+- [Instalacion Rapida](#instalacion-rapida)
+- [Variables de Entorno](#variables-de-entorno)
+- [Base de Datos](#base-de-datos)
+- [Iniciar el Servidor](#iniciar-el-servidor)
+- [Endpoints de la API](#endpoints-de-la-api)
+  - [Health Check](#health-check)
+  - [Autenticacion](#autenticacion)
+  - [Transacciones](#transacciones)
+  - [Categorias](#categorias)
+  - [Alertas](#alertas)
+  - [Recomendaciones](#recomendaciones)
+- [Autenticacion JWT](#autenticacion-jwt)
+- [Modelos de Datos](#modelos-de-datos)
+- [Estructura del Proyecto](#estructura-del-proyecto)
+- [Base de Datos Avanzada](#base-de-datos-avanzada)
+- [WebSocket - Chat en Tiempo Real](#websocket---chat-en-tiempo-real)
+- [Scripts de Mantenimiento](#scripts-de-mantenimiento)
+- [Errores Comunes](#errores-comunes)
+- [Equipo](#equipo)
 
 ---
 
-## Environment variables
+## Requisitos Previos
 
-Create a `.env` file in the root:
-
-```env
-DATABASE_URL=postgresql://postgres:secret@localhost:5432/voicefinance
-JWT_SECRET=change_me_to_a_long_random_secret_32chars
-OPENAI_API_KEY=local_dummy_openai_key
-REDIS_URL=redis://localhost:6379
-N8N_WEBHOOK_URL=http://localhost:5678/webhook/test
-NODE_ENV=development
-PORT=3000
-```
-
-> Note: PostgreSQL password is `secret` (see docker-compose.yml).
+| Herramienta | Version | Descarga |
+|-------------|---------|----------|
+| **Node.js** | v18 o superior | [nodejs.org](https://nodejs.org/) |
+| **Docker Desktop** | Ultima version | [docker.com](https://www.docker.com/products/docker-desktop/) |
+| **Git** | Ultima version | [git-scm.com](https://git-scm.com/) |
 
 ---
 
-## Run backend locally
+## Instalacion Rapida
 
 ```bash
-npm ci
-docker compose up -d
+# 1. Clonar el repositorio
+git clone https://github.com/VoiceTeamm/BAFROVT.git
+cd BAFROVT
+git checkout backend
+
+# 2. Instalar dependencias
+npm install
+
+# 3. Configurar variables de entorno
+cp .env.example .env
+# Editar .env con tus valores (ver seccion Variables de Entorno)
+
+# 4. Iniciar base de datos con Docker
+docker run --name vf-postgres -e POSTGRES_PASSWORD=secret -e POSTGRES_DB=voicefinance -p 5432:5432 -d postgres:16
+
+# 5. Generar cliente Prisma y sincronizar schema
 npx prisma generate
 npx prisma db push
+
+# 6. (Opcional) Cargar datos de prueba
 npx ts-node prisma/seed.ts
+
+# 7. Iniciar el servidor
 npm run dev
 ```
 
----
-
-## Health check
-
-```bash
-curl http://localhost:3000/health
+Si todo esta bien, veras:
+```
+Socket.io inicializado
+VoiceFinance API corriendo en http://localhost:3000
+Socket.io activo
 ```
 
-Expected:
+---
 
+## Variables de Entorno
+
+Crear archivo `.env` en la raiz del proyecto (copiar de `.env.example`):
+
+| Variable | Descripcion | Ejemplo |
+|----------|-------------|---------|
+| `DATABASE_URL` | Conexion a PostgreSQL | `postgresql://postgres:secret@localhost:5432/voicefinance` |
+| `JWT_SECRET` | Clave para tokens (min 32 chars) | `voicefinance_secret_key_2024_secure` |
+| `OPENAI_API_KEY` | Clave de OpenAI para IA | `sk-tu-api-key` |
+| `REDIS_URL` | Conexion a Redis | `redis://localhost:6379` |
+| `N8N_WEBHOOK_URL` | URL webhook de n8n | `http://localhost:5678/webhook/recommendation` |
+| `PORT` | Puerto del servidor (opcional) | `3000` |
+
+> **Importante:** El `JWT_SECRET` debe tener minimo 32 caracteres o el servidor no arrancara.
+
+> **Nunca** subas el archivo `.env` a GitHub.
+
+---
+
+## Base de Datos
+
+### Iniciar el contenedor PostgreSQL
+
+```bash
+# Primera vez (crear contenedor)
+docker run --name vf-postgres -e POSTGRES_PASSWORD=secret -e POSTGRES_DB=voicefinance -p 5432:5432 -d postgres:16
+
+# Si ya existe el contenedor
+docker start vf-postgres
+
+# Verificar que esta corriendo
+docker ps
+```
+
+### Sincronizar schema
+
+```bash
+npx prisma generate    # Genera el cliente TypeScript
+npx prisma db push     # Crea/actualiza tablas en PostgreSQL
+```
+
+### Datos de prueba
+
+```bash
+npx ts-node prisma/seed.ts
+```
+
+Esto crea un usuario de prueba con categorias, transacciones, alertas y recomendaciones precargadas.
+
+---
+
+## Iniciar el Servidor
+
+```bash
+npm run dev
+```
+
+- **Backend:** `http://localhost:3000`
+- **Frontend:** `http://localhost:5173` (rama frontend)
+- **CORS:** configurado para aceptar requests desde `http://localhost:5173`
+
+### Verificar que funciona
+
+```
+GET http://localhost:3000/health
+```
+
+Respuesta:
 ```json
-{"status":"ok"}
+{
+  "status": "ok",
+  "timestamp": "2026-05-19T22:07:54.983Z"
+}
 ```
 
 ---
 
-## Docker services
+## Endpoints de la API
 
-- voicefinance-postgres
-- voicefinance-redis
+**URL Base:** `http://localhost:3000`
 
-Stop:
+### Health Check
 
-```bash
-docker compose down
-```
-
-Reset data:
-
-```bash
-docker compose down -v
-```
-
----
-
-## API routes
-
-| Method | Path | Auth | Description |
+| Metodo | Ruta | Auth | Descripcion |
 |--------|------|------|-------------|
-| POST | /api/auth/register | No | Register |
-| POST | /api/auth/login | No | Login |
-| GET | /api/transactions | Yes | List |
-| POST | /api/transactions | Yes | Create |
-| GET | /api/transactions/summary | Yes | Summary |
-| GET | /api/recommendations | Yes | List |
-| PATCH | /api/recommendations/:id | Yes | Update |
-| POST | /api/chat | Yes | Chat |
-| POST | /api/voice | Yes | Voice |
-| GET | /health | No | Health |
+| `GET` | `/health` | No | Verificar estado del servidor |
 
 ---
 
-## Seed user
+### Autenticacion
 
-After running seed:
+Estos endpoints **NO** requieren token.
 
-- Email: test@example.com  
-- Password: password123  
-- Business type: restaurant
+| Metodo | Ruta | Descripcion |
+|--------|------|-------------|
+| `POST` | `/api/auth/register` | Registrar nuevo usuario |
+| `POST` | `/api/auth/login` | Iniciar sesion |
+
+#### `POST /api/auth/register`
+
+**Request:**
+```json
+{
+  "name": "Victor Cartagena",
+  "email": "victor@test.com",
+  "password": "123456",
+  "businessType": "general"
+}
+```
+
+**Response (201):**
+```json
+{
+  "user": {
+    "id": "12e002df-c9c5-437a-88b0-c334e3550507",
+    "name": "Victor Cartagena",
+    "email": "victor@test.com",
+    "businessType": "general"
+  },
+  "token": "eyJhbGciOiJIUzI1NiIs..."
+}
+```
+
+#### `POST /api/auth/login`
+
+**Request:**
+```json
+{
+  "email": "victor@test.com",
+  "password": "123456"
+}
+```
+
+**Response (200):**
+```json
+{
+  "user": {
+    "id": "12e002df-...",
+    "name": "Victor Cartagena",
+    "email": "victor@test.com",
+    "businessType": "general"
+  },
+  "token": "eyJhbGciOiJIUzI1NiIs..."
+}
+```
+
+---
+
+### Transacciones
+
+Todos requieren **token JWT** en el header `Authorization: Bearer <token>`.
+
+| Metodo | Ruta | Descripcion |
+|--------|------|-------------|
+| `POST` | `/api/transactions` | Crear transaccion |
+| `GET` | `/api/transactions` | Listar transacciones (paginado) |
+| `GET` | `/api/transactions/summary` | Resumen financiero |
+| `GET` | `/api/transactions/:id` | Obtener una transaccion |
+| `PUT` | `/api/transactions/:id` | Actualizar transaccion |
+| `DELETE` | `/api/transactions/:id` | Eliminar transaccion |
+
+#### `POST /api/transactions`
+
+**Request:**
+```json
+{
+  "type": "EXPENSE",
+  "amount": 1500,
+  "categoryId": "uuid-de-la-categoria",
+  "note": "Compra de insumos"
+}
+```
+
+**Response (201):**
+```json
+{
+  "id": "443cd89d-bc31-432a-...",
+  "userId": "12e002df-...",
+  "categoryId": "1deff772-...",
+  "type": "EXPENSE",
+  "amount": 1500,
+  "note": "Compra de insumos",
+  "date": "2026-05-19T22:50:42.647Z",
+  "source": "MANUAL",
+  "category": {
+    "id": "1deff772-...",
+    "name": "Publicidad",
+    "type": "EXPENSE"
+  }
+}
+```
+
+#### `GET /api/transactions?page=1&limit=10`
+
+**Query params:**
+
+| Param | Tipo | Default | Descripcion |
+|-------|------|---------|-------------|
+| `page` | number | 1 | Numero de pagina |
+| `limit` | number | 10 | Items por pagina |
+
+**Response:**
+```json
+{
+  "transactions": [...],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 25,
+    "totalPages": 3
+  }
+}
+```
+
+#### `GET /api/transactions/summary?startDate=2026-01-01&endDate=2026-12-31`
+
+**Query params:**
+
+| Param | Tipo | Descripcion |
+|-------|------|-------------|
+| `startDate` | ISO Date | Fecha inicio del rango |
+| `endDate` | ISO Date | Fecha fin del rango |
+
+**Response:**
+```json
+{
+  "totalIncome": 50000,
+  "totalExpenses": 30000,
+  "balance": 20000,
+  "byCategory": {
+    "Ventas": 50000,
+    "Publicidad": 15000,
+    "Insumos": 15000
+  },
+  "transactionCount": 25
+}
+```
+
+---
+
+### Categorias
+
+Todos requieren **token JWT**.
+
+| Metodo | Ruta | Descripcion |
+|--------|------|-------------|
+| `GET` | `/api/categories` | Listar categorias del usuario |
+| `GET` | `/api/categories/:id` | Obtener una categoria |
+| `POST` | `/api/categories` | Crear categoria |
+| `PUT` | `/api/categories/:id` | Actualizar categoria |
+| `DELETE` | `/api/categories/:id` | Eliminar categoria |
+
+#### `POST /api/categories`
+
+**Request:**
+```json
+{
+  "name": "Marketing",
+  "type": "EXPENSE"
+}
+```
+
+> `type` solo acepta: `"INCOME"` o `"EXPENSE"`
+
+**Response (201):**
+```json
+{
+  "id": "1deff772-...",
+  "userId": "12e002df-...",
+  "name": "Marketing",
+  "type": "EXPENSE",
+  "color": "#3B82F6",
+  "icon": "tag"
+}
+```
+
+> **Nota:** No se puede eliminar una categoria que tenga transacciones asociadas.
+
+---
+
+### Alertas
+
+Todos requieren **token JWT**.
+
+| Metodo | Ruta | Descripcion |
+|--------|------|-------------|
+| `GET` | `/api/alerts` | Listar alertas del usuario |
+| `GET` | `/api/alerts?unread=true` | Solo alertas no leidas |
+| `PATCH` | `/api/alerts/:id/read` | Marcar alerta como leida |
+
+#### `GET /api/alerts`
+
+**Response:**
+```json
+[
+  {
+    "id": "dd5d820a-...",
+    "userId": "604239e2-...",
+    "message": "Tus gastos en insumos subieron un 20%",
+    "type": "COST_INCREASE",
+    "isRead": false,
+    "createdAt": "2026-05-17T01:07:05.805Z"
+  }
+]
+```
+
+**Tipos de alerta:**
+
+| Tipo | Descripcion |
+|------|-------------|
+| `COST_INCREASE` | Gastos aumentaron mas del 20% vs mes anterior |
+| `LOW_MARGIN` | Margen actual por debajo del objetivo del usuario |
+| `CASH_FLOW` | Balance negativo (gastos superan ingresos) |
+
+---
+
+### Recomendaciones
+
+Todos requieren **token JWT**.
+
+| Metodo | Ruta | Descripcion |
+|--------|------|-------------|
+| `GET` | `/api/recommendations` | Listar recomendaciones |
+| `GET` | `/api/recommendations?status=ACTIVE` | Filtrar por estado |
+| `PATCH` | `/api/recommendations/:id` | Actualizar estado |
+
+#### `GET /api/recommendations`
+
+**Response:**
+```json
+[
+  {
+    "id": "99881480-...",
+    "userId": "604239e2-...",
+    "categoryId": "7d4c2084-...",
+    "title": "Reducir costo de insumos",
+    "description": "Buscar proveedores alternativos",
+    "suggestedPrice": 680,
+    "currentPrice": 800,
+    "variationPct": -15,
+    "status": "ACTIVE",
+    "createdAt": "2026-05-17T01:07:05.794Z",
+    "category": {
+      "id": "7d4c2084-...",
+      "name": "Insumos",
+      "type": "EXPENSE"
+    }
+  }
+]
+```
+
+#### `PATCH /api/recommendations/:id`
+
+**Request:**
+```json
+{
+  "status": "APPLIED"
+}
+```
+
+> `status` solo acepta: `"DISMISSED"` o `"APPLIED"`
+
+---
+
+## Autenticacion JWT
+
+Todos los endpoints (excepto `/health`, `/api/auth/register` y `/api/auth/login`) requieren un token JWT.
+
+### Como obtener el token
+
+1. Hacer `POST /api/auth/login` o `POST /api/auth/register`
+2. El response incluye un campo `token`
+
+### Como usar el token
+
+Agregar en **cada request** el header:
+
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
+```
+
+### Ejemplo con fetch (Frontend)
+
+```javascript
+const response = await fetch('http://localhost:3000/api/transactions', {
+  method: 'GET',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  }
+});
+const data = await response.json();
+```
+
+### Ejemplo con axios (Frontend)
+
+```javascript
+// Configurar interceptor global
+axios.defaults.baseURL = 'http://localhost:3000';
+axios.interceptors.request.use(config => {
+  const token = localStorage.getItem('token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+// Usar normalmente
+const { data } = await axios.get('/api/transactions');
+const { data } = await axios.post('/api/categories', { name: 'Ventas', type: 'INCOME' });
+```
+
+> **El token expira en 24 horas.** Despues de eso, el usuario debe hacer login de nuevo.
+
+> **Respuesta cuando el token es invalido o expiro:**
+> ```json
+> { "error": true, "message": "Token invalido o expirado." }
+> ```
+> **Status code:** `401`
+
+---
+
+## Modelos de Datos
+
+### User (usuarios)
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| `id` | String (UUID) | Identificador unico |
+| `name` | String | Nombre completo |
+| `email` | String | Email (unico) |
+| `passwordHash` | String | Hash bcrypt de la contrasena |
+| `businessType` | String | Tipo de negocio |
+| `targetMarginPct` | Float | Margen objetivo (default: 40%) |
+| `createdAt` | DateTime | Fecha de creacion |
+| `updatedAt` | DateTime | Ultima actualizacion |
+
+### Transaction (transacciones)
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| `id` | String (UUID) | Identificador unico |
+| `userId` | String | ID del usuario propietario |
+| `categoryId` | String | ID de la categoria |
+| `type` | Enum | `INCOME` o `EXPENSE` |
+| `amount` | Float | Monto de la transaccion |
+| `note` | String? | Nota opcional |
+| `date` | DateTime | Fecha de la transaccion |
+| `source` | Enum | `MANUAL`, `CHAT` o `VOICE` |
+| `rawText` | String? | Texto original (voz/chat) |
+
+### Category (categorias)
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| `id` | String (UUID) | Identificador unico |
+| `userId` | String | ID del usuario propietario |
+| `name` | String | Nombre de la categoria |
+| `type` | Enum | `INCOME` o `EXPENSE` |
+| `color` | String | Color hex (default: #3B82F6) |
+| `icon` | String | Icono (default: tag) |
+
+### Alert (alertas)
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| `id` | String (UUID) | Identificador unico |
+| `userId` | String | ID del usuario |
+| `message` | String | Mensaje de la alerta |
+| `type` | Enum | `COST_INCREASE`, `LOW_MARGIN`, `CASH_FLOW` |
+| `isRead` | Boolean | Si fue leida (default: false) |
+| `createdAt` | DateTime | Fecha de creacion |
+
+### Recommendation (recomendaciones)
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| `id` | String (UUID) | Identificador unico |
+| `userId` | String | ID del usuario |
+| `categoryId` | String | Categoria relacionada |
+| `title` | String | Titulo de la recomendacion |
+| `description` | String | Descripcion detallada |
+| `suggestedPrice` | Float | Precio sugerido |
+| `currentPrice` | Float | Precio actual |
+| `variationPct` | Float | Porcentaje de variacion |
+| `status` | Enum | `ACTIVE`, `DISMISSED`, `APPLIED` |
+
+### MonthlySummary (resumenes mensuales)
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| `id` | Int | Identificador autoincremental |
+| `userId` | String | ID del usuario |
+| `categoryId` | String | Categoria |
+| `year` | Int | Ano |
+| `month` | Int | Mes (1-12) |
+| `totalAmount` | Float | Monto total |
+| `transactionCount` | Int | Cantidad de transacciones |
+| `avgAmount` | Float | Promedio por transaccion |
+
+---
+
+## Estructura del Proyecto
+
+```
+BAFROVT/
+├── prisma/
+│   ├── schema.prisma          # Modelo de datos (tablas y relaciones)
+│   ├── seed.ts                # Datos de prueba
+│   └── migrations/            # Migraciones de BD
+├── sql/
+│   ├── security_setup.sql     # Roles y Row Level Security
+│   ├── materialized_views.sql # Vistas para reportes financieros
+│   └── functions.sql          # Funciones de logica de negocio
+├── scripts/
+│   ├── backup.sh              # Backup de la base de datos
+│   ├── restore.sh             # Restauracion desde backup
+│   └── maintenance.sh         # VACUUM ANALYZE + refresh vistas
+├── src/
+│   ├── index.ts               # Punto de entrada del servidor
+│   ├── modules/
+│   │   ├── auth/              # Login y registro
+│   │   │   ├── auth.routes.ts
+│   │   │   ├── auth.service.ts
+│   │   │   └── auth.schemas.ts
+│   │   ├── transactions/      # CRUD de transacciones
+│   │   │   ├── transaction.routes.ts
+│   │   │   ├── transaction.service.ts
+│   │   │   └── transaction.schemas.ts
+│   │   ├── categories/        # CRUD de categorias
+│   │   │   ├── category.routes.ts
+│   │   │   ├── category.controller.ts
+│   │   │   ├── category.service.ts
+│   │   │   └── category.schemas.ts
+│   │   ├── alerts/            # Sistema de alertas
+│   │   │   ├── alert.routes.ts
+│   │   │   ├── alert.service.ts
+│   │   │   └── alert.schemas.ts
+│   │   ├── recommendations/   # Recomendaciones con IA
+│   │   │   ├── recommendations.routes.ts
+│   │   │   ├── recommendations.controller.ts
+│   │   │   ├── recommendations.service.ts
+│   │   │   └── recommendations.schemas.ts
+│   │   ├── chat/              # Chat en tiempo real
+│   │   ├── voice/             # Procesamiento de voz
+│   │   └── webhooks/          # Integracion n8n
+│   └── shared/
+│       ├── config/
+│       │   ├── prisma.ts      # Conexion a PostgreSQL
+│       │   ├── env.ts         # Validacion de variables (Zod)
+│       │   └── socket.ts      # Configuracion Socket.io
+│       ├── middleware/
+│       │   ├── authGuard.ts   # Middleware de autenticacion JWT
+│       │   ├── errorHandler.ts
+│       │   └── validateBody.ts
+│       └── types/             # Tipos TypeScript compartidos
+├── .env.example               # Plantilla de variables de entorno
+├── docker-compose.yml         # Configuracion Docker
+├── package.json
+├── prisma.config.ts           # Configuracion de Prisma
+└── tsconfig.json
+```
+
+---
+
+## Base de Datos Avanzada
+
+### Seguridad (Row Level Security)
+
+La base de datos implementa **RLS** para que cada usuario solo pueda ver sus propios datos:
+
+- **Roles:** `app_user` (lectura/escritura) y `app_readonly` (solo lectura)
+- **Tablas protegidas:** transactions, categories, monthly_summaries, alerts, recommendations
+- **Politica:** cada query filtra automaticamente por `userId`
+
+### Vistas Materializadas
+
+Vistas pre-calculadas para reportes rapidos (se refrescan automaticamente con un trigger):
+
+| Vista | Descripcion |
+|-------|-------------|
+| `resumen_financiero_mensual` | Ingresos, gastos y margen por mes |
+| `gastos_por_categoria` | Desglose de gastos con porcentajes |
+| `tendencia_semanal` | Patrones semanales de ingresos/gastos |
+
+### Funciones SQL
+
+| Funcion | Descripcion |
+|---------|-------------|
+| `calcular_margen_mensual(userId, year, month)` | Calcula ingresos, gastos y margen % |
+| `generar_resumen_mensual(userId, year, month)` | Inserta/actualiza en monthly_summaries |
+| `detectar_alertas(userId)` | Genera alertas automaticas |
+| `obtener_balance_actual(userId)` | Balance en tiempo real |
+
+### Indexes de Rendimiento
+
+```
+idx_tx_user_type_date     → Transaction(userId, type, date)
+idx_tx_amount_desc        → Transaction(amount)
+idx_monthly_year_month    → MonthlySummary(year, month)
+idx_alerts_unread         → Alert(isRead)
+```
+
+---
+
+## WebSocket - Chat en Tiempo Real
+
+El servidor usa **Socket.io** para el chat. Conexion desde el frontend:
+
+```javascript
+import { io } from 'socket.io-client';
+
+const socket = io('http://localhost:3000', {
+  auth: { token: 'tu-jwt-token' }
+});
+
+// Escuchar mensajes
+socket.on('message', (data) => {
+  console.log('Nuevo mensaje:', data);
+});
+
+// Enviar mensaje
+socket.emit('message', { content: 'Hola' });
+```
+
+---
+
+## Scripts de Mantenimiento
+
+```bash
+# Backup de la base de datos
+bash scripts/backup.sh
+
+# Restaurar desde backup
+bash scripts/restore.sh backups/backup_20260519.sql.gz
+
+# Mantenimiento (VACUUM + refresh vistas + monitoreo)
+bash scripts/maintenance.sh
+```
+
+---
+
+## Errores Comunes
+
+| Error | Solucion |
+|-------|----------|
+| `P1001: Can't reach database` | Docker Desktop abierto? Ejecuta: `docker start vf-postgres` |
+| `ZodError: JWT_SECRET too_small` | Tu JWT_SECRET tiene menos de 32 caracteres |
+| `ZodError: expected string, undefined` | Faltan variables en tu `.env` |
+| `datasource.url is required` | Verifica que `prisma.config.ts` tenga `import 'dotenv/config'` |
+| `EADDRINUSE: port 3000` | Algo ya usa el puerto 3000. Cierra ese proceso |
+| `Cannot find module '@prisma/client'` | Ejecuta: `npx prisma generate` |
+| `Foreign key constraint violated` | El `categoryId` no existe. Crea la categoria primero |
+| `Token invalido o expirado` | Haz login de nuevo para obtener un token nuevo |
+
+---
+
+## Equipo
+
+| Persona | Rol | Responsabilidad |
+|---------|-----|-----------------|
+| **Victor** | Persona E | Base de Datos, Integracion, QA |
+| **Julio** | Persona C | Backend (Auth, Transactions, Categories, Alerts, Recommendations) |
+| **Paola** | - | Estabilizacion y configuracion Prisma |
+| **Gabi** | - | Merge e integracion de ramas |
+
+---
+
+<p align="center">
+  <b>VoiceFinance AI</b> - Backend v1.0<br>
+  <i>Universidad - Proyecto Grupal 2026</i>
+</p>
