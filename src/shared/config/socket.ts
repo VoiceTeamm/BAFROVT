@@ -22,8 +22,8 @@ export function initSocket(httpServer: HttpServer): SocketServer {
     }
 
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: string };
-      (socket as any).userId = decoded.id;
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
+      (socket as any).userId = decoded.userId;
       next();
     } catch {
       next(new Error('Token inválido o expirado'));

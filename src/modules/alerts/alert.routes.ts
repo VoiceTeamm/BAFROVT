@@ -1,8 +1,10 @@
 ﻿import { Router } from 'express';
-import { AuthRequest } from '../../shared/middleware/authGuard';
+import { authGuard, AuthRequest } from '../../shared/middleware/authGuard';
 import { AlertService } from './alert.service';
 
 export const alertRouter = Router();
+
+alertRouter.use(authGuard);
 
 // GET /api/alerts - Listar alertas del usuario
 alertRouter.get('/', async (req: AuthRequest, res) => {

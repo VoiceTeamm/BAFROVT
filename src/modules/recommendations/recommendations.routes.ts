@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { AuthRequest } from '../../shared/middleware/authGuard';
+import { authGuard, AuthRequest } from '../../shared/middleware/authGuard';
 import RecommendationService from './recommendations.service';
 import { z } from 'zod';
 
@@ -8,6 +8,8 @@ const updateSchema = z.object({
 });
 
 export const recommendationRouter = Router();
+
+recommendationRouter.use(authGuard);
 
 recommendationRouter.get('/', async (req: AuthRequest, res) => {
     try {
