@@ -2,13 +2,13 @@ import { io, type Socket } from 'socket.io-client'
 
 let socket: Socket | null = null
 
-const BASE_URL = import.meta.env.VITE_API_URL?.replace('/api', '') ?? ''
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ?? 'http://localhost:3000'
 
 export const socketService = {
   connect: (token: string): Socket => {
     if (socket?.connected) return socket
 
-    socket = io(BASE_URL, {
+    socket = io(SOCKET_URL, {
       auth: { token },
       autoConnect: true,
       reconnection: true,

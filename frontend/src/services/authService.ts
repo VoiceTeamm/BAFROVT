@@ -10,7 +10,7 @@ export interface RegisterPayload {
   name: string
   email: string
   password: string
-  businessType: string
+  businessName: string
 }
 
 export interface AuthResponse {
@@ -24,10 +24,4 @@ export const authService = {
 
   register: (payload: RegisterPayload) =>
     api.post<AuthResponse>('/auth/register', payload).then((r) => r.data),
-
-  logout: () =>
-    api.post('/auth/logout').then((r) => r.data),
-
-  me: () =>
-    api.get<User>('/auth/me').then((r) => r.data),
 }

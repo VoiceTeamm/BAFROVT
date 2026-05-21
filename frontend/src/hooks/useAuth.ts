@@ -26,7 +26,6 @@ export function useAuth() {
   })
 
   const logout = useCallback(() => {
-    authService.logout().catch(() => {})
     clearAuth()
     navigate(ROUTES.LOGIN)
   }, [clearAuth, navigate])
