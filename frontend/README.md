@@ -1,8 +1,8 @@
 # VoiceFinance AI — Frontend
 
-Frontend oficial de **VoiceFinance AI**, una plataforma fintech inteligente diseñada para la gestión financiera de pequeños negocios mediante inteligencia artificial, analítica financiera, procesamiento de voz y comunicación en tiempo real.
+Frontend oficial de **VoiceFinance AI**, una plataforma fintech inteligente diseñada para la gestión financiera de pequeños negocios mediante inteligencia artificial, procesamiento de voz, analítica financiera y comunicación en tiempo real.
 
-Construido con tecnologías modernas enfocadas en escalabilidad, mantenibilidad y experiencia de usuario profesional.
+Este proyecto está construido con una arquitectura moderna basada en **React + TypeScript + Vite**, enfocada en escalabilidad, mantenibilidad y experiencia de usuario profesional.
 
 ---
 
@@ -10,16 +10,16 @@ Construido con tecnologías modernas enfocadas en escalabilidad, mantenibilidad 
 
 VoiceFinance AI permite a los usuarios:
 
+- Autenticarse de forma segura con JWT
 - Gestionar ingresos y gastos
 - Registrar transacciones manualmente
 - Registrar transacciones mediante voz
 - Interactuar con un asistente financiero basado en IA
-- Visualizar métricas financieras en tiempo real
+- Visualizar métricas financieras
 - Recibir alertas automáticas
 - Obtener recomendaciones inteligentes
 - Gestionar categorías financieras
-- Mantener autenticación segura con JWT
-- Utilizar funcionalidades en tiempo real mediante WebSocket
+- Mantener comunicación en tiempo real mediante WebSocket
 
 ---
 
@@ -27,46 +27,68 @@ VoiceFinance AI permite a los usuarios:
 
 ## Frontend
 
-| Tecnología | Versión | Uso |
-|----------|---------|-----|
-| React | 19 | Framework principal |
+| Tecnología | Versión | Propósito |
+|----------|---------|----------|
+| React | 19 | Framework UI |
 | Vite | 8 | Build tool |
 | TypeScript | 5+ | Tipado estático |
 | Tailwind CSS | 4 | Sistema de estilos |
-| React Router DOM | 7 | Navegación |
+| React Router DOM | 7 | Routing |
 | Zustand | 5 | Estado global |
 | Axios | 1+ | Cliente HTTP |
-| Socket.io Client | 4+ | Comunicación en tiempo real |
-| React Query (@tanstack/react-query) | 5 | Manejo de estado servidor |
-| Recharts | 3 | Gráficos dashboard |
+| Socket.io Client | 4+ | Comunicación tiempo real |
+| React Query (@tanstack/react-query) | 5 | Server state |
+| Recharts | 3 | Visualización dashboard |
 | Lucide React | latest | Iconografía |
 | clsx | latest | Clases condicionales |
-| tailwind-merge | latest | Merge de utilidades Tailwind |
+| tailwind-merge | latest | Merge Tailwind |
 
 ---
 
 # Instalación
 
-## 1. Clonar repositorio
+## Clonar repositorio
 
 ```bash
 git clone https://github.com/VoiceTeamm/BAFROVT.git
 cd BAFROVT/frontend
 ```
 
----
-
-## 2. Instalar dependencias
+## Instalar dependencias
 
 ```bash
 npm install
 ```
 
+## Ejecutar proyecto
+
+```bash
+npm run dev
+```
+
+Frontend:
+
+```bash
+http://localhost:5173
+```
+
+## Build producción
+
+```bash
+npm run build
+```
+
+## Ejecutar linter
+
+```bash
+npm run lint
+```
+
 ---
 
-## 3. Configurar variables de entorno
+# Variables de Entorno
 
-Crear:
+Crear archivo:
 
 ```bash
 frontend/.env.local
@@ -79,77 +101,39 @@ VITE_API_URL=http://localhost:3000/api
 VITE_SOCKET_URL=http://localhost:3000
 ```
 
----
+### Variables
 
-## 4. Ejecutar proyecto
-
-```bash
-npm run dev
-```
-
-Frontend:
-
-```bash
-http://localhost:5173
-```
+| Variable | Descripción |
+|---------|-------------|
+| VITE_API_URL | URL base del backend REST API |
+| VITE_SOCKET_URL | URL del servidor Socket.io |
 
 ---
 
-## 5. Build producción
+# Arquitectura Frontend
 
-```bash
-npm run build
-```
-
----
-
-## 6. Linter
-
-```bash
-npm run lint
-```
-
----
-
-# Arquitectura del Frontend
-
-Estructura principal:
+## Estructura principal
 
 ```text
 src/
 ├── components/
-│   ├── ui/
-│   ├── auth/
-│   ├── chat/
-│   ├── dashboard/
-│   ├── transactions/
-│   ├── recommendations/
-│   └── config/
-│
 ├── hooks/
-│
 ├── services/
-│
 ├── store/
-│
 ├── routes/
-│
 ├── pages/
-│
 ├── layouts/
-│
 ├── types/
-│
 └── lib/
 ```
 
 ---
 
-# Estructura Detallada
+# Arquitectura Detallada
 
 ## components/
 
-Contiene componentes reutilizables y módulos visuales.
+Contiene componentes visuales reutilizables y módulos funcionales.
 
 ```text
 components/
@@ -161,65 +145,31 @@ components/
 │   ├── Loader.tsx
 │   ├── Table.tsx
 │   └── Badge.tsx
+│
+├── auth/
+│   ├── LoginForm.tsx
+│   ├── RegisterForm.tsx
+│   └── ProtectedRoute.tsx
+│
+├── chat/
+│   ├── ChatWindow.tsx
+│   ├── ChatInput.tsx
+│   ├── MessageBubble.tsx
+│   ├── TypingIndicator.tsx
+│   └── VoiceButton.tsx
+│
+├── dashboard/
+│
+├── transactions/
+│
+├── recommendations/
+│
+└── config/
 ```
 
-Sistema de diseño compartido.
-
 ---
 
-### auth/
-
-```text
-auth/
-├── LoginForm.tsx
-├── RegisterForm.tsx
-└── ProtectedRoute.tsx
-```
-
-Módulo autenticación.
-
----
-
-### chat/
-
-```text
-chat/
-├── ChatWindow.tsx
-├── ChatInput.tsx
-├── MessageBubble.tsx
-├── TypingIndicator.tsx
-└── VoiceButton.tsx
-```
-
-Módulo asistente IA + voz.
-
----
-
-### dashboard/
-
-Widgets dashboard financiero.
-
----
-
-### transactions/
-
-Tabla, filtros y formularios transaccionales.
-
----
-
-### recommendations/
-
-Tarjetas y acciones de recomendaciones.
-
----
-
-### config/
-
-Panel de configuración.
-
----
-
-# hooks/
+## hooks/
 
 Hooks personalizados.
 
@@ -235,9 +185,9 @@ hooks/
 
 ---
 
-# services/
+## services/
 
-Comunicación backend.
+Servicios de integración backend.
 
 ```text
 services/
@@ -253,7 +203,7 @@ services/
 
 ---
 
-# store/
+## store/
 
 Estado global con Zustand.
 
@@ -265,7 +215,7 @@ store/
 
 ---
 
-# layouts/
+## layouts/
 
 Layouts generales.
 
@@ -277,9 +227,9 @@ layouts/
 
 ---
 
-# pages/
+## pages/
 
-Páginas principales.
+Páginas del sistema.
 
 ```text
 pages/
@@ -291,6 +241,24 @@ pages/
 ├── RecommendationsPage.tsx
 └── ConfigPage.tsx
 ```
+
+---
+
+## routes/
+
+Definición de rutas protegidas y públicas.
+
+---
+
+## types/
+
+Interfaces TypeScript compartidas.
+
+---
+
+## lib/
+
+Utilidades auxiliares.
 
 ---
 
@@ -321,7 +289,7 @@ src/index.css
 
 ---
 
-# Rutas Frontend
+# Rutas del Frontend
 
 | Ruta | Página | Protegida |
 |------|--------|-----------|
@@ -337,7 +305,7 @@ src/index.css
 
 # Integración Backend
 
-Base API:
+Base URL:
 
 ```bash
 http://localhost:3000/api
@@ -357,7 +325,7 @@ http://localhost:3000/api
 
 ---
 
-## Chat
+## Chat IA
 
 | Método | Endpoint |
 |--------|----------|
@@ -416,7 +384,7 @@ http://localhost:3000/api
 
 ---
 
-## Analytics
+## Analítica
 
 | Método | Endpoint |
 |--------|----------|
@@ -437,7 +405,7 @@ const socket = io(import.meta.env.VITE_SOCKET_URL, {
 });
 ```
 
-Eventos:
+Eventos soportados:
 
 ```text
 new_recommendation
@@ -455,16 +423,16 @@ n8n:recommendation
 
 1. Usuario inicia sesión
 2. Backend devuelve JWT
-3. JWT se almacena en Zustand + localStorage
+3. Token se guarda en Zustand + localStorage
 4. Axios interceptor agrega Authorization header
-5. ProtectedRoute valida autenticación
-6. `/api/auth/me` valida sesión activa
+5. ProtectedRoute valida sesión
+6. `/api/auth/me` verifica usuario autenticado
 7. `/api/auth/refresh` renueva token
-8. logout elimina sesión
+8. logout destruye sesión
 
 ---
 
-# Distribución del Trabajo
+# Distribución del Proyecto
 
 ## Persona A — Frontend Inteligente
 
@@ -473,36 +441,42 @@ Responsable de:
 ### Autenticación
 - Login
 - Registro
-- JWT
+- Persistencia JWT
 - Refresh token
 - Logout
 - Protected routes
-- Persistencia sesión
 
 ### Chat IA
-- interfaz chat
-- envío mensajes
-- respuestas IA
-- typing indicator
+- Interfaz chat
+- Envío de mensajes
+- Respuestas IA
+- Typing indicator
 
 ### Voz
 - MediaRecorder
-- upload audio
-- transcripción
+- Upload audio
+- Transcripción
 
 ### Socket
-- realtime
-- recomendaciones
-- eventos chat
+- Comunicación realtime
+- Eventos chat
+- Eventos recomendaciones
 
-### UI Auth
-- rediseño premium fintech
-- login
-- register
+### UI
+- Rediseño premium fintech
+- Login
+- Register
+
+Estado:
+
+```text
+Completado
+Listo para integración backend
+```
 
 ---
 
-## Persona B — UI Financiera
+## Persona B — Módulo Financiero
 
 Responsable de:
 
@@ -518,7 +492,7 @@ Responsable de:
 
 ### Recommendations
 - cards
-- acciones
+- acciones UI
 
 ### Config
 - configuración usuario
@@ -527,32 +501,32 @@ Estado:
 
 ```text
 UI completada
-Integración backend pendiente
+Pendiente conexión backend
 ```
 
 ---
 
-# Estado Actual del Proyecto
+# Estado del Proyecto
 
 | Módulo | Estado |
 |-------|--------|
 | Arquitectura frontend | Completa |
-| UI sistema diseño | Completa |
-| Auth frontend | Completa |
-| Chat frontend | Completa |
-| Voice frontend | Completa |
-| Socket frontend | Completa |
-| Dashboard UI | Completa |
-| Transactions UI | Completa |
-| Recommendations UI | Completa |
-| Config UI | Completa |
-| Integración backend Persona A | Lista para conexión |
+| Sistema diseño | Completo |
+| Auth frontend | Completo |
+| Chat frontend | Completo |
+| Voice frontend | Completo |
+| Socket frontend | Completo |
+| Dashboard UI | Completo |
+| Transactions UI | Completo |
+| Recommendations UI | Completo |
+| Config UI | Completo |
+| Integración backend Persona A | Lista |
 | Integración backend Persona B | Pendiente |
 | Proyecto end-to-end | En integración |
 
 ---
 
-# Flujo Git
+# Workflow Git
 
 Branches:
 
@@ -563,7 +537,7 @@ frontend
 backend
 ```
 
-Workflow:
+Flujo recomendado:
 
 ```bash
 git checkout develop
@@ -575,7 +549,7 @@ Commit:
 
 ```bash
 git add .
-git commit -m "feat: descripcion del cambio"
+git commit -m "feat: descripcion"
 ```
 
 Push:
@@ -584,7 +558,7 @@ Push:
 git push origin nombre-rama
 ```
 
-Pull Request:
+Pull Request hacia:
 
 ```text
 develop
@@ -597,15 +571,15 @@ develop
 | Rol | Responsabilidad |
 |-----|----------------|
 | Persona A | Auth, Chat, Voice, Socket |
-| Persona B | Dashboard, Transactions, Config, Recommendations |
+| Persona B | Dashboard, Transactions, Recommendations, Config |
 | Backend Team | API REST, Prisma, PostgreSQL, WebSocket, IA |
 
 ---
 
 # Notas
 
-- Backend debe estar activo para integración completa
+- Backend debe estar activo
 - JWT requerido para rutas protegidas
 - Socket requiere autenticación
-- Persona B pendiente de conexión real con backend
-- Proyecto preparado para integración final
+- Persona B pendiente integración real
+- Proyecto preparado para integración completa
