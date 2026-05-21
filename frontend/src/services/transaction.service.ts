@@ -1,26 +1,28 @@
 import api from './api'
-import type { Transaction } from '../types'
+import type { Transaction, TransactionPagination } from '../types'
 
-export interface TransactionFilters {
-  from?: string
-  to?: string
+export interface TransactionListResult {
+  transactions: Transaction[]
+  pagination: TransactionPagination
+}
+
+export interface CreateTransactionPayload {
+  type: 'INCOME' | 'EXPENSE'
+  amount: number
   category?: string
-  type?: 'all' | 'credit' | 'debit'
+  description?: string
+  date?: string
 }
 
 export const transactionService = {
-  getAll: (filters?: TransactionFilters) => {
-    const params: Record<string, string> = {}
-    if (filters?.from) params.from = filters.from
-    if (filters?.to) params.to = filters.to
-    if (filters?.category) params.category = filters.category
-    if (filters?.type && filters.type !== 'all') params.type = filters.type
-    return api.get<Transaction[]>('/transactions', { params }).then((r) => r.data)
-  },
+  getAll: (page = 1, limit = 10): Promise<TransactionListResult> =>
+    api
+      .get<TransactionListResult>('/transactions', { params: { page, limit } })
+      .then((r) => r.data),
 
-  getById: (id: string) =>
+  getById: (id: string): Promise<Transaction> =>
     api.get<Transaction>(`/transactions/${id}`).then((r) => r.data),
 
-  create: (payload: Omit<Transaction, 'id'>) =>
+  create: (payload: CreateTransactionPayload): Promise<Transaction> =>
     api.post<Transaction>('/transactions', payload).then((r) => r.data),
 }

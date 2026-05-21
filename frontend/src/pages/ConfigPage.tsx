@@ -14,7 +14,11 @@ export function ConfigPage() {
 
       <Card title="API Connection" description="Backend integration status">
         <div className="flex items-center gap-3">
-          <Badge variant="warning">Not connected</Badge>
+          {import.meta.env.VITE_API_URL ? (
+            <Badge variant="success">Configured</Badge>
+          ) : (
+            <Badge variant="warning">Not configured</Badge>
+          )}
           <span className="text-sm text-gray-400 font-mono">
             {import.meta.env.VITE_API_URL ?? 'VITE_API_URL not set'}
           </span>

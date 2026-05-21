@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Modal, Input, Button } from '../ui'
-import { transactionService } from '../../services/transaction.service'
-import type { Transaction } from '../../types'
+import { transactionService, type CreateTransactionPayload } from '../../services/transaction.service'
+import { useCategories } from '../../hooks/useCategories'
 
 interface TransactionFormProps {
   open: boolean
@@ -10,7 +10,7 @@ interface TransactionFormProps {
 }
 
 interface FormState {
-  type: 'credit' | 'debit'
+  type: 'INCOME' | 'EXPENSE'
   category: string
   amount: string
   note: string
@@ -20,7 +20,7 @@ interface FormState {
 type FormErrors = Partial<Record<keyof FormState, string>>
 
 const INITIAL: FormState = {
-  type: 'credit',
+  type: 'INCOME',
   category: '',
   amount: '',
   note: '',
@@ -35,9 +35,10 @@ export function TransactionForm({ open, onClose }: TransactionFormProps) {
   const [form, setForm] = useState<FormState>(INITIAL)
   const [errors, setErrors] = useState<FormErrors>({})
   const queryClient = useQueryClient()
+  const { categories } = useCategories()
 
   const mutation = useMutation({
-    mutationFn: (payload: Omit<Transaction, 'id'>) => transactionService.create(payload),
+    mutationFn: (payload: CreateTransactionPayload) => transactionService.create(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] })
       setForm(INITIAL)
@@ -53,7 +54,6 @@ export function TransactionForm({ open, onClose }: TransactionFormProps) {
 
   const validate = (): FormErrors => {
     const errs: FormErrors = {}
-    if (!form.category.trim()) errs.category = 'Category is required'
     if (!form.amount || isNaN(Number(form.amount)) || Number(form.amount) <= 0)
       errs.amount = 'Enter a valid positive amount'
     if (!form.note.trim()) errs.note = 'Note is required'
@@ -67,18 +67,14 @@ export function TransactionForm({ open, onClose }: TransactionFormProps) {
       setErrors(errs)
       return
     }
-    mutation.mutate({
+    const payload: CreateTransactionPayload = {
       type: form.type,
-      category: {
-        id: form.category.toLowerCase().replace(/\s+/g, '-'),
-        name: form.category.trim(),
-      },
       amount: Number(form.amount),
       description: form.note.trim(),
-      date: form.date,
-      currency: 'USD',
-      status: 'completed',
-    })
+      date: new Date(form.date).toISOString(),
+    }
+    if (form.category) payload.category = form.category
+    mutation.mutate(payload)
   }
 
   const handleClose = () => {
@@ -120,21 +116,29 @@ export function TransactionForm({ open, onClose }: TransactionFormProps) {
           <label className="text-sm font-medium text-text-light">Type</label>
           <select
             value={form.type}
-            onChange={(e) => set('type', e.target.value as 'credit' | 'debit')}
+            onChange={(e) => set('type', e.target.value as 'INCOME' | 'EXPENSE')}
             className={selectClass}
           >
-            <option value="credit">INCOME</option>
-            <option value="debit">EXPENSE</option>
+            <option value="INCOME">INCOME</option>
+            <option value="EXPENSE">EXPENSE</option>
           </select>
         </div>
 
-        <Input
-          label="Category"
-          placeholder="e.g. Food & Dining"
-          value={form.category}
-          onChange={(e) => set('category', e.target.value)}
-          error={errors.category}
-        />
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium text-text-light">Category</label>
+          <select
+            value={form.category}
+            onChange={(e) => set('category', e.target.value)}
+            className={selectClass}
+          >
+            <option value="">— No category —</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.name}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
 
         <Input
           label="Amount"

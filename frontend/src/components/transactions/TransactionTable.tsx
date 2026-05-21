@@ -15,15 +15,13 @@ const columns: Column<Transaction>[] = [
   {
     key: 'category',
     header: 'Category',
-    render: (row) => <Badge>{row.category.name}</Badge>,
+    render: (row) => <Badge>{row.category ?? '—'}</Badge>,
   },
   {
     key: 'type',
     header: 'Type',
     render: (row) => (
-      <Badge variant={row.type === 'credit' ? 'success' : 'error'}>
-        {row.type === 'credit' ? 'INCOME' : 'EXPENSE'}
-      </Badge>
+      <Badge variant={row.type === 'INCOME' ? 'success' : 'error'}>{row.type}</Badge>
     ),
   },
   {
@@ -32,28 +30,11 @@ const columns: Column<Transaction>[] = [
     render: (row) => (
       <span
         className={
-          row.type === 'credit' ? 'text-success font-medium' : 'text-error font-medium'
+          row.type === 'INCOME' ? 'text-success font-medium' : 'text-error font-medium'
         }
       >
-        {row.type === 'credit' ? '+' : '-'}${row.amount.toFixed(2)}
+        {row.type === 'INCOME' ? '+' : '-'}${row.amount.toFixed(2)}
       </span>
-    ),
-  },
-  {
-    key: 'status',
-    header: 'Status',
-    render: (row) => (
-      <Badge
-        variant={
-          row.status === 'completed'
-            ? 'success'
-            : row.status === 'pending'
-              ? 'warning'
-              : 'error'
-        }
-      >
-        {row.status}
-      </Badge>
     ),
   },
 ]

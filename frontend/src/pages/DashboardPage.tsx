@@ -3,36 +3,20 @@ import { useAnalytics } from '../hooks/useAnalytics'
 import { Card, Loader } from '../components/ui'
 import { KPICard } from '../components/dashboard/KPICard'
 import { SummaryPanel } from '../components/dashboard/SummaryPanel'
-import { TrendsChart } from '../components/dashboard/TrendsChart'
-import type { AnalyticsSummary, AnalyticsTrend } from '../types'
 
-// TODO: remove mock data when backend is ready
-const MOCK_SUMMARY: AnalyticsSummary = {
-  totalBalance: 12480,
-  monthlyIncome: 4200,
-  monthlyExpenses: 2950,
-  savingsRate: 29.76,
-  currency: 'USD',
-  period: 'May 2026',
+const CURRENCY = 'USD'
+
+function fmt(n: number) {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: CURRENCY }).format(n)
 }
 
-const MOCK_TRENDS: AnalyticsTrend[] = [
-  { date: 'Week 1', income: 1050, expenses: 700, balance: 350 },
-  { date: 'Week 2', income: 1050, expenses: 800, balance: 250 },
-  { date: 'Week 3', income: 1050, expenses: 650, balance: 400 },
-  { date: 'Week 4', income: 1050, expenses: 800, balance: 250 },
-]
-
-function fmt(n: number, currency: string) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(n)
+function periodLabel(startDate: string) {
+  const d = new Date(startDate + 'T00:00:00')
+  return d.toLocaleString('en-US', { month: 'long', year: 'numeric' })
 }
 
 export function DashboardPage() {
-  const { summary: liveSummary, trends: liveTrends, isLoading, error } = useAnalytics()
-
-  // Use mock data as fallback when backend is unavailable
-  const summary = liveSummary ?? (error ? MOCK_SUMMARY : null)
-  const trends = liveTrends.length > 0 ? liveTrends : error ? MOCK_TRENDS : []
+  const { summary, startDate, isLoading, error } = useAnalytics()
 
   if (isLoading) {
     return (
@@ -42,63 +26,59 @@ export function DashboardPage() {
     )
   }
 
-  if (!summary) {
+  if (error || !summary) {
     return (
       <div className="flex items-center justify-center py-20 text-gray-400 text-sm">
-        No analytics data available.
+        {error ? 'Could not load analytics — backend not reachable.' : 'No analytics data available.'}
       </div>
     )
   }
 
-  const netProfit = summary.monthlyIncome - summary.monthlyExpenses
-  const marginPct =
-    summary.monthlyIncome > 0 ? (netProfit / summary.monthlyIncome) * 100 : 0
-  const { currency } = summary
+  const { totalIncome, totalExpenses, balance } = summary
+  const marginPct = totalIncome > 0 ? (balance / totalIncome) * 100 : 0
+  const period = periodLabel(startDate)
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-text-light">Dashboard</h1>
-        {error && (
-          <span className="text-xs text-warning">Demo data — backend not reachable.</span>
-        )}
-      </div>
+      <h1 className="text-xl font-bold text-text-light">Dashboard</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
           label="Ingresos del mes"
-          value={fmt(summary.monthlyIncome, currency)}
-          sub={summary.period}
+          value={fmt(totalIncome)}
+          sub={period}
           icon={<TrendingUp size={16} />}
           valueClass="text-success"
         />
         <KPICard
           label="Egresos del mes"
-          value={fmt(summary.monthlyExpenses, currency)}
-          sub={summary.period}
+          value={fmt(totalExpenses)}
+          sub={period}
           icon={<TrendingDown size={16} />}
           valueClass="text-error"
         />
         <KPICard
           label="Ganancia neta"
-          value={fmt(netProfit, currency)}
-          sub={summary.period}
+          value={fmt(balance)}
+          sub={period}
           icon={<DollarSign size={16} />}
-          valueClass={netProfit >= 0 ? 'text-success' : 'text-error'}
+          valueClass={balance >= 0 ? 'text-success' : 'text-error'}
         />
         <KPICard
           label="Margen %"
           value={`${marginPct.toFixed(1)}%`}
-          sub={summary.period}
+          sub={period}
           icon={<Percent size={16} />}
           valueClass={marginPct >= 20 ? 'text-success' : 'text-warning'}
         />
       </div>
 
-      <SummaryPanel netProfit={netProfit} marginPct={marginPct} currency={currency} />
+      <SummaryPanel netProfit={balance} marginPct={marginPct} currency={CURRENCY} />
 
       <Card title="Ingresos vs Egresos" description="Weekly / monthly trend">
-        <TrendsChart data={trends} />
+        <p className="py-8 text-center text-sm text-gray-400">
+          Trend data not yet available from backend.
+        </p>
       </Card>
     </div>
   )

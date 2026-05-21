@@ -9,32 +9,49 @@ export interface User {
 export interface Category {
   id: string
   name: string
-  icon?: string
+  type: 'INCOME' | 'EXPENSE'
   color?: string
+  icon?: string
 }
 
 export interface Transaction {
   id: string
   date: string
-  description: string
+  description?: string
   amount: number
-  currency: string
-  category: Category
-  status: 'completed' | 'pending' | 'failed'
-  type: 'credit' | 'debit'
+  category?: string
+  categoryId?: string
+  type: 'INCOME' | 'EXPENSE'
+  createdAt?: string
+  updatedAt?: string
+}
+
+export interface TransactionPagination {
+  page: number
+  limit: number
+  total: number
+  totalPages: number
+}
+
+export interface TransactionSummary {
+  totalIncome: number
+  totalExpenses: number
+  balance: number
+  byCategory: Record<string, number>
+  transactionCount: number
 }
 
 export interface Recommendation {
   id: string
   title: string
   description: string
-  priority: 'high' | 'medium' | 'low'
-  type: 'saving' | 'investment' | 'alert' | 'tip'
-  createdAt: string
   suggestedPrice?: number
   currentPrice?: number
   variationPct?: number
-  status?: 'active' | 'applied' | 'dismissed'
+  status: 'ACTIVE' | 'APPLIED' | 'DISMISSED'
+  createdAt: string
+  categoryId?: string
+  category?: Category
 }
 
 export interface Alert {
@@ -43,20 +60,4 @@ export interface Alert {
   severity: 'info' | 'warning' | 'error' | 'success'
   read: boolean
   createdAt: string
-}
-
-export interface AnalyticsSummary {
-  totalBalance: number
-  monthlyIncome: number
-  monthlyExpenses: number
-  savingsRate: number
-  currency: string
-  period: string
-}
-
-export interface AnalyticsTrend {
-  date: string
-  income: number
-  expenses: number
-  balance: number
 }

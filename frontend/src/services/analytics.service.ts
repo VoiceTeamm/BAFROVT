@@ -1,10 +1,9 @@
 import api from './api'
-import type { AnalyticsSummary, AnalyticsTrend } from '../types'
+import type { TransactionSummary } from '../types'
 
 export const analyticsService = {
-  getSummary: () =>
-    api.get<AnalyticsSummary>('/analytics/summary', { params: { period: 'month' } }).then((r) => r.data),
-
-  getTrends: () =>
-    api.get<AnalyticsTrend[]>('/analytics/trends', { params: { periods: 3 } }).then((r) => r.data),
+  getSummary: (startDate: string, endDate: string) =>
+    api
+      .get<TransactionSummary>('/transactions/summary', { params: { startDate, endDate } })
+      .then((r) => r.data),
 }

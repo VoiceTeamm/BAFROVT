@@ -1,35 +1,25 @@
-import { Lightbulb, TrendingUp, AlertTriangle, Zap, type LucideIcon } from 'lucide-react'
+import { Lightbulb } from 'lucide-react'
 import { Card, Badge, Button } from '../ui'
 import type { Recommendation } from '../../types'
 
 interface RecommendationCardProps {
-  recommendation: Recommendation
+  recommendation: Recommendation & { priority: 'high' | 'medium' | 'low' }
   onApply: (id: string) => void
   onDismiss: (id: string) => void
   isApplying?: boolean
   isDismissing?: boolean
 }
 
-const iconMap: Record<Recommendation['type'], LucideIcon> = {
-  saving: Lightbulb,
-  investment: TrendingUp,
-  alert: AlertTriangle,
-  tip: Zap,
-}
-
-const priorityVariant: Record<Recommendation['priority'], 'error' | 'warning' | 'primary'> = {
+const priorityVariant: Record<'high' | 'medium' | 'low', 'error' | 'warning' | 'primary'> = {
   high: 'error',
   medium: 'warning',
   low: 'primary',
 }
 
-const statusVariant: Record<
-  NonNullable<Recommendation['status']>,
-  'default' | 'success' | 'error'
-> = {
-  active: 'default',
-  applied: 'success',
-  dismissed: 'error',
+const statusVariant: Record<Recommendation['status'], 'default' | 'success' | 'error'> = {
+  ACTIVE: 'default',
+  APPLIED: 'success',
+  DISMISSED: 'error',
 }
 
 function fmt(n: number) {
@@ -43,23 +33,20 @@ export function RecommendationCard({
   isApplying,
   isDismissing,
 }: RecommendationCardProps) {
-  const Icon = iconMap[rec.type]
-  const isDone = rec.status === 'applied' || rec.status === 'dismissed'
+  const isDone = rec.status === 'APPLIED' || rec.status === 'DISMISSED'
 
   return (
     <Card>
       <div className="flex items-start gap-4">
         <div className="shrink-0 rounded-lg bg-blue-50 p-2.5">
-          <Icon size={20} className="text-primary" />
+          <Lightbulb size={20} className="text-primary" />
         </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2 mb-1">
             <h3 className="font-semibold text-text-light text-sm">{rec.title}</h3>
             <Badge variant={priorityVariant[rec.priority]}>{rec.priority}</Badge>
-            {rec.status && (
-              <Badge variant={statusVariant[rec.status]}>{rec.status}</Badge>
-            )}
+            <Badge variant={statusVariant[rec.status]}>{rec.status}</Badge>
           </div>
 
           <p className="text-sm text-gray-500 leading-relaxed mb-2">{rec.description}</p>
@@ -81,9 +68,7 @@ export function RecommendationCard({
               {rec.variationPct != null && (
                 <span>
                   Change:{' '}
-                  <strong
-                    className={rec.variationPct >= 0 ? 'text-success' : 'text-error'}
-                  >
+                  <strong className={rec.variationPct >= 0 ? 'text-success' : 'text-error'}>
                     {rec.variationPct > 0 ? '+' : ''}
                     {rec.variationPct.toFixed(1)}%
                   </strong>

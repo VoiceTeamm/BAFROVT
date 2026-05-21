@@ -2,15 +2,20 @@ import api from './api'
 import type { Recommendation } from '../types'
 
 export const recommendationService = {
-  getAll: () =>
-    api.get<Recommendation[]>('/recommendations').then((r) => r.data),
+  getAll: (): Promise<Recommendation[]> =>
+    api
+      .get<{ recommendations: Recommendation[] }>('/recommendations', {
+        params: { status: 'ACTIVE' },
+      })
+      .then((r) => r.data.recommendations),
 
-  markRead: (id: string) =>
-    api.patch<void>(`/recommendations/${id}/read`).then((r) => r.data),
+  apply: (id: string): Promise<Recommendation> =>
+    api
+      .patch<{ recommendation: Recommendation }>(`/recommendations/${id}`, { status: 'APPLIED' })
+      .then((r) => r.data.recommendation),
 
-  apply: (id: string) =>
-    api.patch<void>(`/recommendations/${id}/apply`).then((r) => r.data),
-
-  dismiss: (id: string) =>
-    api.patch<void>(`/recommendations/${id}/dismiss`).then((r) => r.data),
+  dismiss: (id: string): Promise<Recommendation> =>
+    api
+      .patch<{ recommendation: Recommendation }>(`/recommendations/${id}`, { status: 'DISMISSED' })
+      .then((r) => r.data.recommendation),
 }

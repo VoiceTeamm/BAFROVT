@@ -1,14 +1,18 @@
 import { useQuery } from '@tanstack/react-query'
-import { transactionService, type TransactionFilters } from '../services/transaction.service'
+import { transactionService, type TransactionListResult } from '../services/transaction.service'
+import type { TransactionPagination } from '../types'
 
-export function useTransactions(filters?: TransactionFilters) {
-  const query = useQuery({
-    queryKey: ['transactions', filters],
-    queryFn: () => transactionService.getAll(filters),
+const EMPTY_PAGINATION: TransactionPagination = { page: 1, limit: 10, total: 0, totalPages: 0 }
+
+export function useTransactions(page = 1, limit = 10) {
+  const query = useQuery<TransactionListResult>({
+    queryKey: ['transactions', page, limit],
+    queryFn: () => transactionService.getAll(page, limit),
   })
 
   return {
-    transactions: query.data ?? [],
+    transactions: query.data?.transactions ?? [],
+    pagination: query.data?.pagination ?? EMPTY_PAGINATION,
     isLoading: query.isLoading,
     error: query.error,
     refetch: query.refetch,
