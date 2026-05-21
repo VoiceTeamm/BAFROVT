@@ -27,6 +27,7 @@
   - [Categorias](#categorias)
   - [Alertas](#alertas)
   - [Recomendaciones](#recomendaciones)
+  - [Analytics](#analytics)
 - [Autenticacion JWT](#autenticacion-jwt)
 - [Modelos de Datos](#modelos-de-datos)
 - [Estructura del Proyecto](#estructura-del-proyecto)
@@ -177,12 +178,13 @@ Respuesta:
 
 ### Autenticacion
 
-Estos endpoints **NO** requieren token.
-
-| Metodo | Ruta | Descripcion |
-|--------|------|-------------|
-| `POST` | `/api/auth/register` | Registrar nuevo usuario |
-| `POST` | `/api/auth/login` | Iniciar sesion |
+| Metodo | Ruta | Auth | Descripcion |
+|--------|------|------|-------------|
+| `POST` | `/api/auth/register` | No | Registrar nuevo usuario |
+| `POST` | `/api/auth/login` | No | Iniciar sesion |
+| `GET` | `/api/auth/me` | Si | Obtener perfil del usuario autenticado |
+| `POST` | `/api/auth/refresh` | Si | Renovar token JWT |
+| `POST` | `/api/auth/logout` | Si | Cerrar sesion |
 
 #### `POST /api/auth/register`
 
@@ -232,6 +234,94 @@ Estos endpoints **NO** requieren token.
 }
 ```
 
+#### `GET /api/auth/me`
+
+> Requiere token JWT en el header `Authorization: Bearer <token>`
+
+Devuelve los datos del usuario autenticado. El frontend debe usar este endpoint al iniciar la app para verificar si la sesion sigue activa.
+
+**Response (200):**
+```json
+{
+  "id": "12e002df-...",
+  "name": "Victor Cartagena",
+  "email": "victor@test.com",
+  "businessType": "general",
+  "targetMarginPct": 40,
+  "createdAt": "2026-05-19T22:07:54.983Z"
+}
+```
+
+**Ejemplo de uso en frontend:**
+```javascript
+// Al iniciar la app, verificar sesion
+const token = localStorage.getItem('token');
+if (token) {
+  const res = await fetch('/api/auth/me', {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (res.ok) {
+    const user = await res.json();
+    // Sesion activa, cargar dashboard
+  } else {
+    // Token expirado, redirigir a login
+    localStorage.removeItem('token');
+    window.location.href = '/login';
+  }
+}
+```
+
+#### `POST /api/auth/refresh`
+
+> Requiere token JWT en el header `Authorization: Bearer <token>`
+
+Renueva el token JWT antes de que expire. El frontend debe llamar este endpoint periodicamente para mantener la sesion activa.
+
+**Response (200):**
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIs..."
+}
+```
+
+**Ejemplo de uso en frontend:**
+```javascript
+// Renovar token cada 23 horas (el token expira en 24h)
+setInterval(async () => {
+  const res = await fetch('/api/auth/refresh', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+  });
+  if (res.ok) {
+    const { token } = await res.json();
+    localStorage.setItem('token', token);
+  }
+}, 23 * 60 * 60 * 1000);
+```
+
+#### `POST /api/auth/logout`
+
+> Requiere token JWT en el header `Authorization: Bearer <token>`
+
+Cierra la sesion del usuario. El frontend debe eliminar el token almacenado.
+
+**Response (200):**
+```json
+{
+  "message": "Sesion cerrada correctamente"
+}
+```
+
+**Ejemplo de uso en frontend:**
+```javascript
+await fetch('/api/auth/logout', {
+  method: 'POST',
+  headers: { 'Authorization': `Bearer ${token}` }
+});
+localStorage.removeItem('token');
+window.location.href = '/login';
+```
+
 ---
 
 ### Transacciones
@@ -242,7 +332,7 @@ Todos requieren **token JWT** en el header `Authorization: Bearer <token>`.
 |--------|------|-------------|
 | `POST` | `/api/transactions` | Crear transaccion |
 | `GET` | `/api/transactions` | Listar transacciones (paginado) |
-| `GET` | `/api/transactions/summary` | Resumen financiero |
+| `GET` | `/api/transactions/summary` | Resumen financiero por rango de fechas |
 | `GET` | `/api/transactions/:id` | Obtener una transaccion |
 | `PUT` | `/api/transactions/:id` | Actualizar transaccion |
 | `DELETE` | `/api/transactions/:id` | Eliminar transaccion |
@@ -255,9 +345,11 @@ Todos requieren **token JWT** en el header `Authorization: Bearer <token>`.
   "type": "EXPENSE",
   "amount": 1500,
   "categoryId": "uuid-de-la-categoria",
-  "note": "Compra de insumos"
+  "description": "Compra de insumos"
 }
 ```
+
+> Tambien acepta `category` (nombre de categoria) en lugar de `categoryId`. Si la categoria no existe, se crea automaticamente.
 
 **Response (201):**
 ```json
@@ -277,6 +369,8 @@ Todos requieren **token JWT** en el header `Authorization: Bearer <token>`.
   }
 }
 ```
+
+> **Nota:** El campo `description` del request se mapea a `note` en la base de datos.
 
 #### `GET /api/transactions?page=1&limit=10`
 
@@ -450,6 +544,102 @@ Todos requieren **token JWT**.
 
 ---
 
+### Analytics
+
+Endpoints para graficos y dashboard del frontend. Todos requieren **token JWT**.
+
+| Metodo | Ruta | Descripcion |
+|--------|------|-------------|
+| `GET` | `/api/analytics/summary` | Resumen financiero del mes actual |
+| `GET` | `/api/analytics/trends` | Tendencias de los ultimos 6 meses |
+
+#### `GET /api/analytics/summary`
+
+Devuelve el resumen financiero del mes en curso automaticamente (no requiere parametros de fecha).
+
+**Response (200):**
+```json
+{
+  "period": {
+    "from": "2026-05-01T00:00:00.000Z",
+    "to": "2026-05-31T23:59:59.000Z"
+  },
+  "totalIncome": 50000,
+  "totalExpenses": 30000,
+  "balance": 20000,
+  "transactionCount": 25,
+  "byCategory": {
+    "Ventas": { "total": 50000, "type": "INCOME" },
+    "Publicidad": { "total": 15000, "type": "EXPENSE" },
+    "Insumos": { "total": 15000, "type": "EXPENSE" }
+  }
+}
+```
+
+**Ejemplo de uso en frontend (Dashboard):**
+```javascript
+const res = await fetch('/api/analytics/summary', {
+  headers: { 'Authorization': `Bearer ${token}` }
+});
+const data = await res.json();
+
+// Mostrar en tarjetas del dashboard
+document.getElementById('income').textContent = `$${data.totalIncome}`;
+document.getElementById('expenses').textContent = `$${data.totalExpenses}`;
+document.getElementById('balance').textContent = `$${data.balance}`;
+```
+
+#### `GET /api/analytics/trends`
+
+Devuelve las tendencias de ingresos y gastos de los ultimos 6 meses. Ideal para graficos de lineas o barras.
+
+**Response (200):**
+```json
+{
+  "trends": [
+    {
+      "month": "2025-12",
+      "income": 45000,
+      "expenses": 28000,
+      "balance": 17000
+    },
+    {
+      "month": "2026-01",
+      "income": 48000,
+      "expenses": 31000,
+      "balance": 17000
+    },
+    {
+      "month": "2026-02",
+      "income": 52000,
+      "expenses": 29000,
+      "balance": 23000
+    }
+  ]
+}
+```
+
+**Ejemplo de uso en frontend (Grafico con Chart.js):**
+```javascript
+const res = await fetch('/api/analytics/trends', {
+  headers: { 'Authorization': `Bearer ${token}` }
+});
+const { trends } = await res.json();
+
+new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: trends.map(t => t.month),
+    datasets: [
+      { label: 'Ingresos', data: trends.map(t => t.income), borderColor: '#10B981' },
+      { label: 'Gastos', data: trends.map(t => t.expenses), borderColor: '#EF4444' },
+    ]
+  }
+});
+```
+
+---
+
 ## Autenticacion JWT
 
 Todos los endpoints (excepto `/health`, `/api/auth/register` y `/api/auth/login`) requieren un token JWT.
@@ -493,10 +683,55 @@ axios.interceptors.request.use(config => {
 
 // Usar normalmente
 const { data } = await axios.get('/api/transactions');
-const { data } = await axios.post('/api/categories', { name: 'Ventas', type: 'INCOME' });
+const { data: categories } = await axios.post('/api/categories', { name: 'Ventas', type: 'INCOME' });
 ```
 
-> **El token expira en 24 horas.** Despues de eso, el usuario debe hacer login de nuevo.
+### Flujo completo de autenticacion (Frontend)
+
+```javascript
+// 1. Login
+const loginRes = await fetch('/api/auth/login', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ email: 'victor@test.com', password: '123456' })
+});
+const { token, user } = await loginRes.json();
+localStorage.setItem('token', token);
+
+// 2. Al iniciar la app, verificar sesion con /me
+const meRes = await fetch('/api/auth/me', {
+  headers: { 'Authorization': `Bearer ${token}` }
+});
+if (meRes.ok) {
+  const user = await meRes.json();
+  // Usuario autenticado, cargar dashboard
+} else {
+  // Token invalido, redirigir a login
+  localStorage.removeItem('token');
+  window.location.href = '/login';
+}
+
+// 3. Renovar token periodicamente
+setInterval(async () => {
+  const res = await fetch('/api/auth/refresh', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+  });
+  if (res.ok) {
+    const { token } = await res.json();
+    localStorage.setItem('token', token);
+  }
+}, 23 * 60 * 60 * 1000); // Cada 23 horas
+
+// 4. Logout
+await fetch('/api/auth/logout', {
+  method: 'POST',
+  headers: { 'Authorization': `Bearer ${token}` }
+});
+localStorage.removeItem('token');
+```
+
+> **El token expira en 24 horas.** Usa `/api/auth/refresh` para renovarlo sin que el usuario tenga que hacer login de nuevo.
 
 > **Respuesta cuando el token es invalido o expiro:**
 > ```json
@@ -599,12 +834,14 @@ BAFROVT/
 ├── src/
 │   ├── index.ts               # Punto de entrada del servidor
 │   ├── modules/
-│   │   ├── auth/              # Login y registro
+│   │   ├── auth/              # Login, registro, perfil, refresh, logout
 │   │   │   ├── auth.routes.ts
+│   │   │   ├── auth.controller.ts
 │   │   │   ├── auth.service.ts
 │   │   │   └── auth.schemas.ts
-│   │   ├── transactions/      # CRUD de transacciones
+│   │   ├── transactions/      # CRUD de transacciones + resumen
 │   │   │   ├── transaction.routes.ts
+│   │   │   ├── transaction.controller.ts
 │   │   │   ├── transaction.service.ts
 │   │   │   └── transaction.schemas.ts
 │   │   ├── categories/        # CRUD de categorias
@@ -621,6 +858,10 @@ BAFROVT/
 │   │   │   ├── recommendations.controller.ts
 │   │   │   ├── recommendations.service.ts
 │   │   │   └── recommendations.schemas.ts
+│   │   ├── analytics/         # Dashboard: resumen y tendencias
+│   │   │   ├── analytics.routes.ts
+│   │   │   ├── analytics.controller.ts
+│   │   │   └── analytics.service.ts
 │   │   ├── chat/              # Chat en tiempo real
 │   │   ├── voice/             # Procesamiento de voz
 │   │   └── webhooks/          # Integracion n8n
@@ -675,10 +916,10 @@ Vistas pre-calculadas para reportes rapidos (se refrescan automaticamente con un
 ### Indexes de Rendimiento
 
 ```
-idx_tx_user_type_date     → Transaction(userId, type, date)
-idx_tx_amount_desc        → Transaction(amount)
-idx_monthly_year_month    → MonthlySummary(year, month)
-idx_alerts_unread         → Alert(isRead)
+idx_tx_user_type_date     -> Transaction(userId, type, date)
+idx_tx_amount_desc        -> Transaction(amount)
+idx_monthly_year_month    -> MonthlySummary(year, month)
+idx_alerts_unread         -> Alert(isRead)
 ```
 
 ---
@@ -731,7 +972,7 @@ bash scripts/maintenance.sh
 | `EADDRINUSE: port 3000` | Algo ya usa el puerto 3000. Cierra ese proceso |
 | `Cannot find module '@prisma/client'` | Ejecuta: `npx prisma generate` |
 | `Foreign key constraint violated` | El `categoryId` no existe. Crea la categoria primero |
-| `Token invalido o expirado` | Haz login de nuevo para obtener un token nuevo |
+| `Token invalido o expirado` | Haz login de nuevo o usa `/api/auth/refresh` para renovar |
 
 ---
 
@@ -747,6 +988,6 @@ bash scripts/maintenance.sh
 ---
 
 <p align="center">
-  <b>VoiceFinance AI</b> - Backend v1.0<br>
+  <b>VoiceFinance AI</b> - Backend v1.1<br>
   <i>Universidad - Proyecto Grupal 2026</i>
 </p>
