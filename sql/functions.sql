@@ -45,49 +45,38 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- ============================================
+-- =============================================
 -- Funcion 2: generar_resumen_mensual
 -- Inserta o actualiza el resumen mensual de un
--- usuario en la tabla monthly_summaries
--- ============================================
+-- usuario en la tabla monthly_summaries por categoria
+-- =============================================
+
 CREATE OR REPLACE FUNCTION generar_resumen_mensual(
     p_user_id TEXT,
     p_year INT,
     p_month INT
 )
 RETURNS VOID AS $$
-DECLARE
-    v_income DOUBLE PRECISION;
-    v_expense DOUBLE PRECISION;
-    v_margin DOUBLE PRECISION;
-    v_margin_pct DOUBLE PRECISION;
 BEGIN
-    -- Obtener datos calculados
-    SELECT income, expense, margin, margin_pct
-    INTO v_income, v_expense, v_margin, v_margin_pct
-    FROM calcular_margen_mensual(p_user_id, p_year, p_month);
-
-    -- Insertar o actualizar en monthly_summaries
-    INSERT INTO monthly_summaries ("id", "userId", "year", "month", "totalIncome", "totalExpense", "margin", "marginPct", "createdAt", "updatedAt")
-    VALUES (
-        gen_random_uuid()::TEXT,
+    INSERT INTO monthly_summaries ("userId", "categoryId", "year", "month", "totalAmount", "transactionCount", "avgAmount")
+    SELECT
         p_user_id,
+        t."categoryId",
         p_year,
         p_month,
-        v_income,
-        v_expense,
-        v_margin,
-        v_margin_pct,
-        NOW(),
-        NOW()
-    )
-    ON CONFLICT ("userId", "year", "month")
+        COALESCE(SUM(t.amount), 0) AS "totalAmount",
+        COUNT(*) AS "transactionCount",
+        COALESCE(AVG(t.amount), 0) AS "avgAmount"
+    FROM transactions t
+    WHERE t."userId" = p_user_id
+      AND EXTRACT(YEAR FROM t.date) = p_year
+      AND EXTRACT(MONTH FROM t.date) = p_month
+    GROUP BY t."categoryId"
+    ON CONFLICT ("userId", "categoryId", "year", "month")
     DO UPDATE SET
-        "totalIncome" = v_income,
-        "totalExpense" = v_expense,
-        "margin" = v_margin,
-        "marginPct" = v_margin_pct,
-        "updatedAt" = NOW();
+        "totalAmount" = EXCLUDED."totalAmount",
+        "transactionCount" = EXCLUDED."transactionCount",
+        "avgAmount" = EXCLUDED."avgAmount";
 END;
 $$ LANGUAGE plpgsql;
 

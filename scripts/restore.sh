@@ -8,9 +8,14 @@
 # ============================================
 
 # Configuracion
-CONTAINER_NAME="vf-postgres"
-DB_NAME="voicefinance"
-DB_USER="postgres"
+# Cargar variables desde .env si existe
+if [ -f .env ]; then
+    export $(grep -v '^#' .env | xargs)
+fi
+
+CONTAINER_NAME="${CONTAINER_NAME:-vf-postgres}"
+DB_NAME="${DB_NAME:-voicefinance}"
+DB_USER="${DB_USER:-postgres}"
 BACKUP_DIR="./backups"
 
 echo "=== VoiceFinance - Restauracion de Base de Datos ==="

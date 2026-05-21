@@ -8,9 +8,14 @@
 # ============================================
 
 # Configuracion
-CONTAINER_NAME="vf-postgres"
-DB_NAME="voicefinance"
-DB_USER="postgres"
+# Cargar variables desde .env si existe
+if [ -f .env ]; then
+    export $(grep -v '^#' .env | xargs)
+fi
+
+CONTAINER_NAME="${CONTAINER_NAME:-vf-postgres}"
+DB_NAME="${DB_NAME:-voicefinance}"
+DB_USER="${DB_USER:-postgres}"
 BACKUP_DIR="./backups"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 BACKUP_FILE="${BACKUP_DIR}/backup_${TIMESTAMP}.sql.gz"
