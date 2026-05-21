@@ -2,8 +2,7 @@ export interface User {
   id: string
   name: string
   email: string
-  avatarUrl?: string
-  createdAt: string
+  businessType?: string
 }
 
 export interface Category {
@@ -16,14 +15,16 @@ export interface Category {
 
 export interface Transaction {
   id: string
-  date: string
-  description?: string
-  amount: number
-  category?: string
+  userId?: string
   categoryId?: string
+  category?: Category
   type: 'INCOME' | 'EXPENSE'
+  amount: number
+  note?: string
+  date: string
+  source?: string
+  rawText?: string | null
   createdAt?: string
-  updatedAt?: string
 }
 
 export interface TransactionPagination {
@@ -54,10 +55,19 @@ export interface Recommendation {
   category?: Category
 }
 
+export type AlertType = 'COST_INCREASE' | 'LOW_MARGIN' | 'CASH_FLOW'
+
 export interface Alert {
   id: string
+  userId?: string
   message: string
-  severity: 'info' | 'warning' | 'error' | 'success'
-  read: boolean
+  type: AlertType
+  isRead: boolean
   createdAt: string
+}
+
+export interface AnalyticsTrend {
+  date: string
+  income: number
+  expenses: number
 }

@@ -4,10 +4,8 @@ import type { Recommendation } from '../types'
 export const recommendationService = {
   getAll: (): Promise<Recommendation[]> =>
     api
-      .get<{ recommendations: Recommendation[] }>('/recommendations', {
-        params: { status: 'ACTIVE' },
-      })
-      .then((r) => r.data.recommendations),
+      .get<Recommendation[]>('/recommendations', { params: { status: 'ACTIVE' } })
+      .then((r) => r.data),
 
   apply: (id: string): Promise<Recommendation> =>
     api

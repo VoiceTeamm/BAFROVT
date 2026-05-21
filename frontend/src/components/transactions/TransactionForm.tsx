@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
 import { Modal, Input, Button } from '../ui'
 import { transactionService, type CreateTransactionPayload } from '../../services/transaction.service'
 import { useCategories } from '../../hooks/useCategories'
@@ -41,10 +42,13 @@ export function TransactionForm({ open, onClose }: TransactionFormProps) {
     mutationFn: (payload: CreateTransactionPayload) => transactionService.create(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] })
+      queryClient.invalidateQueries({ queryKey: ['analytics'] })
+      toast.success('Transacción guardada')
       setForm(INITIAL)
       setErrors({})
       onClose()
     },
+    onError: () => toast.error('Error al guardar la transacción'),
   })
 
   const set = <K extends keyof FormState>(key: K, val: FormState[K]) => {

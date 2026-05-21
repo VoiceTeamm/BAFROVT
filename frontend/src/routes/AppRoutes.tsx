@@ -8,13 +8,25 @@ import { RecommendationsPage } from '../pages/RecommendationsPage'
 import { ConfigPage } from '../pages/ConfigPage'
 import { MainLayout } from '../layouts/MainLayout'
 import { PrivateRoutes } from './PrivateRoutes'
+import { useAuthStore } from '../store/authStore'
 import { ROUTES } from './index'
+
+function PublicRoute({ children }: { children: React.ReactNode }) {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  return isAuthenticated ? <Navigate to={ROUTES.DASHBOARD} replace /> : <>{children}</>
+}
 
 export function AppRoutes() {
   return (
     <Routes>
-      <Route path={ROUTES.LOGIN} element={<LoginPage />} />
-      <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
+      <Route
+        path={ROUTES.LOGIN}
+        element={<PublicRoute><LoginPage /></PublicRoute>}
+      />
+      <Route
+        path={ROUTES.REGISTER}
+        element={<PublicRoute><RegisterPage /></PublicRoute>}
+      />
 
       <Route element={<PrivateRoutes />}>
         <Route element={<MainLayout />}>

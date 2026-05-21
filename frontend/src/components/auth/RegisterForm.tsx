@@ -61,7 +61,7 @@ export function RegisterForm() {
     const validation = validate(name, email, password, businessType)
     setErrors(validation)
     if (Object.keys(validation).length > 0) return
-    register({ name, email, password, businessName: businessType })
+    register({ name, email, password, businessType })
   }
 
   return (

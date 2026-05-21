@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
 import { Loader } from '../components/ui'
 import { RecommendationCard } from '../components/recommendations/RecommendationCard'
 import { recommendationService } from '../services/recommendation.service'
@@ -21,12 +22,20 @@ export function RecommendationsPage() {
 
   const applyMutation = useMutation({
     mutationFn: recommendationService.apply,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['recommendations'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['recommendations'] })
+      toast.success('Recomendación aplicada')
+    },
+    onError: () => toast.error('No se pudo aplicar la recomendación'),
   })
 
   const dismissMutation = useMutation({
     mutationFn: recommendationService.dismiss,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['recommendations'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['recommendations'] })
+      toast('Recomendación descartada')
+    },
+    onError: () => toast.error('No se pudo descartar la recomendación'),
   })
 
   const active = recommendations.filter((r) => r.status === 'ACTIVE')

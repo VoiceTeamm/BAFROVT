@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { Card, Input, Button, Loader } from '../ui'
 import { useCategories } from '../../hooks/useCategories'
 
@@ -16,7 +17,13 @@ export function CategoryForm() {
   const handleAdd = () => {
     const name = newName.trim()
     if (!name) return
-    createCategory({ name, type: newType })
+    createCategory(
+      { name, type: newType },
+      {
+        onSuccess: () => toast.success(`Categoría "${name}" creada`),
+        onError: () => toast.error('No se pudo crear la categoría'),
+      },
+    )
     setNewName('')
   }
 
