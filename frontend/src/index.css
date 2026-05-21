@@ -19,9 +19,14 @@
   box-sizing: border-box;
 }
 
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+}
+
 body {
   margin: 0;
-  background-color: var(--color-background-light);
+  background-color: var(--color-background-dark);
   color: var(--color-text-light);
   font-family: system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
