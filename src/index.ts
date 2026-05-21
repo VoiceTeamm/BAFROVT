@@ -1,3 +1,4 @@
+import analyticsRoutes from './modules/analytics/analytics.routes';
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
@@ -31,6 +32,7 @@ app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/voice', voiceRoutes);
 app.use('/api/webhooks', webhookRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 app.use(errorHandler);
 

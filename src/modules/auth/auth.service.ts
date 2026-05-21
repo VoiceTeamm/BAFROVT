@@ -42,5 +42,37 @@ export class AuthService {
 
     private generateToken(userId: string) {
         return jwt.sign({ userId }, env.JWT_SECRET, { expiresIn: '24h' });
+
     }
+
+async getMe(userId: string) {
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                businessType: true,
+                targetMarginPct: true,
+                createdAt: true,
+            },
+        });
+        if (!user) throw new Error('Usuario no encontrado');
+        return user;
+    }
+
+    async refreshToken(userId: string) {
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+        });
+        if (!user) throw new Error('Usuario no encontrado');
+        const token = this.generateToken(user.id);
+        return { token };
+    }
+
+    async logout() {
+        return { message: 'Sesión cerrada correctamente' };
+    }
+
+
 }

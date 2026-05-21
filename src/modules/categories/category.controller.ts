@@ -6,7 +6,7 @@ import { AuthRequest } from '../../shared/middleware/authGuard';
 export const CategoryController = {
     async getAll(req: AuthRequest, res: Response) {
         try {
-            const userId = req.userId;
+            const userId = req.userId!;
             const categories = await CategoryService.getAll(userId);
             res.json(categories);
         } catch (error: any) {
@@ -16,7 +16,7 @@ export const CategoryController = {
 
     async getById(req: AuthRequest, res: Response) {
         try {
-            const userId = req.userId;
+            const userId = req.userId!;
             // ✅ Conversión explícita: req.params.id puede ser string | string[]
             const id = req.params.id as string;
             const category = await CategoryService.getById(id, userId);
@@ -29,7 +29,7 @@ export const CategoryController = {
 
     async create(req: AuthRequest, res: Response) {
         try {
-            const userId = req.userId;
+            const userId = req.userId!;
             const parsed = createCategorySchema.safeParse(req.body);
             if (!parsed.success) {
                 return res.status(400).json({ error: 'Datos inválidos', details: parsed.error.issues });
@@ -43,7 +43,7 @@ export const CategoryController = {
 
     async update(req: AuthRequest, res: Response) {
         try {
-            const userId = req.userId;
+            const userId = req.userId!;
             // ✅ Conversión explícita para el ID
             const id = req.params.id as string;
             const parsed = updateCategorySchema.safeParse(req.body);
@@ -59,7 +59,7 @@ export const CategoryController = {
 
     async delete(req: AuthRequest, res: Response) {
         try {
-            const userId = req.userId;
+            const userId = req.userId!;
             // ✅ Conversión explícita para el ID
             const id = req.params.id as string;
             await CategoryService.delete(id, userId);
