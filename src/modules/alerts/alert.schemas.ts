@@ -1,4 +1,3 @@
-﻿// src/modules/alerts/alert.schemas.ts
 import { z } from 'zod';
 
 export const alertResponseSchema = z.object({
@@ -10,7 +9,9 @@ export const alertResponseSchema = z.object({
     createdAt: z.string().datetime(),
 });
 
-export const markAsReadResponseSchema = z.object({
-    message: z.string(),
-    alert: alertResponseSchema,
+export const createAlertSchema = z.object({
+    message: z.string().min(1, 'El mensaje es requerido'),
+    type: z.enum(['COST_INCREASE', 'LOW_MARGIN', 'CASH_FLOW']),
 });
+
+export type CreateAlertInput = z.infer<typeof createAlertSchema>;

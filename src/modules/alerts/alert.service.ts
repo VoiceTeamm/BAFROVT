@@ -1,5 +1,5 @@
 import { prisma } from '../../shared/config/prisma';
-import { AlertType } from '@prisma/client';
+import { AlertType } from '../../generated/client';
 
 export const AlertService = {
     async getAll(userId: string, onlyUnread?: boolean) {

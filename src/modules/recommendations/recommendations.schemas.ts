@@ -1,6 +1,7 @@
-﻿// src/modules/recommendations/recommendations.schemas.ts
 import { z } from 'zod';
 
 export const updateRecommendationSchema = z.object({
-    status: z.enum(['DISMISSED', 'APPLIED']).optional(),
+    status: z.enum(['DISMISSED', 'APPLIED']),
 });
+
+export type UpdateRecommendationInput = z.infer<typeof updateRecommendationSchema>;

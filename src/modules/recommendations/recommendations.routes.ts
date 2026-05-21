@@ -1,11 +1,7 @@
 import { Router } from 'express';
 import { authGuard, AuthRequest } from '../../shared/middleware/authGuard';
 import RecommendationService from './recommendations.service';
-import { z } from 'zod';
-
-const updateSchema = z.object({
-    status: z.enum(['DISMISSED', 'APPLIED']),
-});
+import { updateRecommendationSchema } from './recommendations.schemas';
 
 export const recommendationRouter = Router();
 
@@ -27,7 +23,7 @@ recommendationRouter.patch('/:id', async (req: AuthRequest, res) => {
         const userId = req.userId!;
         const id = req.params.id as string;
 
-        const parsed = updateSchema.safeParse(req.body);
+        const parsed = updateRecommendationSchema.safeParse(req.body);
         if (!parsed.success) {
             return res.status(400).json({ error: true, message: 'Datos invalidos', details: parsed.error.issues });
         }
