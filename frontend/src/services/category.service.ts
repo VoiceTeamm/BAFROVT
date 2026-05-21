@@ -11,18 +11,18 @@ export interface CategoryPayload {
 export const categoryService = {
   getAll: (): Promise<Category[]> =>
     api
-      .get<{ categories: Category[] }>('/categories')
-      .then((r) => r.data.categories),
+      .get<Category[]>('/categories')
+      .then((r) => r.data),
 
   create: (data: CategoryPayload): Promise<Category> =>
     api
-      .post<{ category: Category }>('/categories', data)
-      .then((r) => r.data.category),
+      .post<Category>('/categories', data)
+      .then((r) => r.data),
 
   update: (id: string, data: Partial<CategoryPayload>): Promise<Category> =>
     api
-      .put<{ category: Category }>(`/categories/${id}`, data)
-      .then((r) => r.data.category),
+      .put<Category>(`/categories/${id}`, data)
+      .then((r) => r.data),
 
   remove: (id: string): Promise<void> =>
     api.delete(`/categories/${id}`).then(() => undefined),
